@@ -1,40 +1,52 @@
 <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Dataset Visualizer</title>
 <style>
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;padding:24px;background:#f5f5f7;color:#1d1d1f;max-width:1400px;margin:0 auto;}
-h1{margin:0 0 8px;}
-.subtitle{color:#6e6e73;margin-bottom:16px;font-size:14px;}
-.cat-tabs{display:flex;gap:12px;margin-bottom:20px;border-bottom:3px solid #0071e3;padding-bottom:0;}
-.cat-tab{padding:12px 28px;border:none;background:transparent;cursor:pointer;font-size:16px;font-weight:600;color:#6e6e73;border-radius:8px 8px 0 0;}
-.cat-tab.active{background:#0071e3;color:white;}
-.ds-tabs{display:none;gap:6px;flex-wrap:wrap;margin-bottom:16px;border-bottom:1px solid #d2d2d7;padding-bottom:6px;}
+:root{
+  --bg:#FAF2E9;
+  --fg:#0A3235;
+  --accent:#F0529C;
+  --accent2:#105257;
+  --muted:rgba(10,50,53,0.55);
+  --line:rgba(10,50,53,0.15);
+  --panel:#FAF2E9;
+  --cream-dark:#F1E4D1;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;padding:24px;background:var(--bg);color:var(--fg);max-width:1400px;margin:0 auto;}
+h1{margin:0 0 8px;color:var(--fg);}
+.subtitle{color:var(--muted);margin-bottom:16px;font-size:14px;}
+.cat-tabs{display:flex;gap:12px;margin-bottom:20px;border-bottom:3px solid var(--accent);padding-bottom:0;}
+.cat-tab{padding:12px 28px;border:none;background:transparent;cursor:pointer;font-size:16px;font-weight:600;color:var(--muted);border-radius:8px 8px 0 0;}
+.cat-tab.active{background:var(--accent);color:var(--bg);}
+.ds-tabs{display:none;gap:6px;flex-wrap:wrap;margin-bottom:16px;border-bottom:1px solid var(--line);padding-bottom:6px;}
 .ds-tabs.active{display:flex;}
-.ds-tab{padding:8px 14px;border:1px solid #d2d2d7;background:white;cursor:pointer;font-size:13px;border-radius:6px;color:#333;}
-.ds-tab.active{background:#2c5282;color:white;border-color:#2c5282;}
+.ds-tab{padding:8px 14px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-size:13px;border-radius:6px;color:var(--fg);}
+.ds-tab.active{background:var(--accent2);color:var(--bg);border-color:var(--accent2);}
 .panel{display:none;}
 .panel.active{display:block;}
-.sample{background:white;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.06);display:grid;grid-template-columns:420px 1fr;gap:16px;}
+.sample{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 3px rgba(10,50,53,0.08);display:grid;grid-template-columns:420px 1fr;gap:16px;}
 .img-wrap{position:relative;display:block;}
-.img-wrap img{max-width:100%;height:auto;display:block;border-radius:8px;border:1px solid #e5e5ea;}
+.img-wrap img{max-width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);}
 .overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}
 .overlay .box{pointer-events:auto;cursor:pointer;transition:all .15s;}
 .overlay .box.dim{opacity:.2;}
 .overlay .box.highlight{stroke-width:4;}
-.tooltip{position:absolute;background:#000;color:#fff;padding:8px 12px;border-radius:6px;font-size:13px;font-weight:600;max-width:320px;pointer-events:none;z-index:100;display:none;border:2px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.4);}
+.tooltip{position:absolute;background:var(--fg);color:var(--bg);padding:8px 12px;border-radius:6px;font-size:13px;font-weight:600;max-width:320px;pointer-events:none;z-index:100;display:none;border:2px solid var(--bg);box-shadow:0 4px 12px rgba(10,50,53,0.4);}
 .tooltip.visible{display:block;}
-.sample-meta{font-size:11px;color:#6e6e73;margin-bottom:8px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
-.section-title{font-size:11px;color:#0071e3;text-transform:uppercase;margin:10px 0 4px;font-weight:700;letter-spacing:.5px;}
+.sample-meta{font-size:11px;color:var(--muted);margin-bottom:8px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
+.section-title{font-size:11px;color:var(--accent);text-transform:uppercase;margin:10px 0 4px;font-weight:700;letter-spacing:.5px;}
 .caption-list{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.5;max-height:400px;overflow-y:auto;}
-.caption-text{font-size:13px;line-height:1.5;word-break:break-word;}
-.cap{padding:6px 10px;margin-bottom:4px;background:#f5f5f7;border-radius:4px;cursor:pointer;transition:all .15s;}
-.cap:hover,.cap.highlight{background:#fffbea;}
+.caption-text{font-size:13px;line-height:1.5;word-break:break-word;color:var(--fg);}
+.cap{padding:6px 10px;margin-bottom:4px;background:var(--cream-dark);border-radius:4px;cursor:pointer;transition:all .15s;color:var(--fg);}
+.cap:hover,.cap.highlight{background:var(--accent);color:var(--bg);}
 .cap.dim{opacity:.3;}
-.tag-bbox{color:#0071e3;font-weight:600;}
-.tag-pt{color:#c81e1e;font-weight:600;}
-.json-block{font-family:ui-monospace,monospace;font-size:11px;background:#f5f5f7;padding:10px;border-radius:6px;max-height:400px;overflow:auto;white-space:pre-wrap;word-break:break-word;}
-.knowledge-img{max-width:400px;max-height:300px;border-radius:8px;border:1px solid #e5e5ea;display:block;margin-top:6px;}
+.tag-bbox{color:var(--accent2);font-weight:600;}
+.tag-pt{color:var(--accent);font-weight:600;}
+.json-block{font-family:ui-monospace,monospace;font-size:11px;background:var(--cream-dark);color:var(--fg);padding:10px;border-radius:6px;max-height:400px;overflow:auto;white-space:pre-wrap;word-break:break-word;}
+.knowledge-img{max-width:400px;max-height:300px;border-radius:8px;border:1px solid var(--line);display:block;margin-top:6px;}
 .thumb-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
-.knowledge-thumb{max-width:110px;max-height:90px;border-radius:4px;border:1px solid #e5e5ea;object-fit:cover;}
-.empty{color:#999;font-style:italic;padding:20px;}
+.knowledge-thumb{max-width:110px;max-height:90px;border-radius:4px;border:1px solid var(--line);object-fit:cover;}
+.empty{color:var(--muted);font-style:italic;padding:20px;}
+a{color:var(--accent2);}
+a:hover{color:var(--accent);}
 </style></head><body>
 <h1>Dataset Visualizer</h1>
 <div class="subtitle">Hover a bbox/point to highlight matching caption. Coords in 0-999 grid (for grounding tars only).</div>
