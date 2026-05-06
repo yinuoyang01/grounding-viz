@@ -1,24 +1,29 @@
 <!DOCTYPE html><html><head><meta charset='utf-8'><title>v4 Eval Diff</title>
 <style>body{font-family:-apple-system,sans-serif;max-width:900px;margin:auto;padding:30px;background:#FAF2E9;color:#0A3235}
 a{color:#F0529C;text-decoration:none}a:hover{text-decoration:underline}
-h1,h2{color:#105257}
-ul{padding-left:20px}li{margin:8px 0}
+h1,h2{color:#105257}ul{padding-left:20px}li{margin:8px 0}
 .delta-up{color:#070;font-weight:bold}.delta-dn{color:#c00;font-weight:bold}
 </style></head><body>
-<h1>v4 Eval Diff Visualizations</h1>
-<p>Each report shows ~104 sample prompt + GT references + baseline pred + v4 pred, sorted by Δ. Top losses(v4 worse) shown first, then top gains(v4 better).</p>
+<h1>v4 Eval Diff Visualizations (8 benchmarks)</h1>
 
-<h2>Knowledge benchmarks (baseline vs knowledge_v4)</h2>
+<h2>Knowledge benchmarks (3) - baseline vs knowledge_v4</h2>
 <ul>
-<li><a href='a_okvqa_da_knowledge.html'>a_okvqa_da</a> <span class='delta-dn'>-2.02 (主要失败点)</span></li>
-<li><a href='okvqa_knowledge.html'>okvqa</a> <span>+0.24 (持平)</span></li>
+<li><a href='a_okvqa_da_knowledge.html'>a_okvqa_da</a> <span class='delta-dn'>-2.02 主要失败</span></li>
+<li><a href='a_okvqa_mc_knowledge.html'>a_okvqa_mc</a> <span class='delta-up'>+0.78 (only divergent)</span></li>
+<li><a href='okvqa_knowledge.html'>okvqa</a> <span>+0.24 持平</span></li>
 </ul>
 
-<h2>OCR benchmarks (baseline vs ocr_v4)</h2>
+<h2>OCR benchmarks (4) - baseline vs ocr_v4</h2>
 <ul>
 <li><a href='chart_qa_ocr.html'>chart_qa</a> <span class='delta-up'>+0.84</span></li>
 <li><a href='doc_qa_ocr.html'>doc_qa</a> <span class='delta-up'>+0.99</span></li>
 <li><a href='text_vqa_ocr.html'>text_vqa</a> <span class='delta-up'>+0.64</span> (带真图)</li>
 <li><a href='info_qa_ocr.html'>info_qa</a> <span class='delta-up'>+0.40</span></li>
+</ul>
+
+<h2>General (1) - control benchmark</h2>
+<ul>
+<li><a href='coco_2014_vqa_knowledge_v4.html'>coco_2014_vqa_8192 vs knowledge_v4</a> <span>~0 持平</span></li>
+<li><a href='coco_2014_vqa_ocr_v4.html'>coco_2014_vqa_8192 vs ocr_v4</a> <span>~0 持平</span></li>
 </ul>
 </body></html>
