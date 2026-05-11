@@ -1,0 +1,210 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>OVEN-entity train</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;margin:0 auto;padding:24px;background:#FAF2E9;color:#0A3235;max-width:1400px;}
+h1{margin:0 0 4px;}
+h2{margin:24px 0 8px;border-bottom:2px solid #F0529C;padding-bottom:4px;color:#105257;}
+.subtitle{color:rgba(10,50,53,0.6);margin-bottom:8px;font-size:14px;}
+.up{color:#105257;text-decoration:none;font-size:14px;}
+.stats{display:flex;gap:18px;margin:12px 0 18px;font-size:14px;}
+.stats div{background:#fff;border:1px solid rgba(10,50,53,.15);border-radius:8px;padding:8px 14px;}
+.stats b{color:#F0529C;}
+.intro{background:#fff;border:1px solid rgba(10,50,53,.15);border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:14px;line-height:1.55;}
+.intro code{background:#0A3235;color:#FAF2E9;padding:2px 6px;border-radius:4px;font-size:12.5px;}
+.schema{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:#0A3235;color:#FAF2E9;padding:12px 14px;border-radius:8px;margin-top:10px;white-space:pre-wrap;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:16px;}
+.card{background:#fff;border:1px solid rgba(10,50,53,0.15);border-radius:12px;padding:14px;display:grid;grid-template-columns:200px 1fr;gap:14px;}
+.card img{width:200px;height:200px;object-fit:cover;border-radius:8px;background:#eee;}
+.card .meta{font-size:14px;line-height:1.5;min-width:0;}
+.did{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:rgba(10,50,53,0.55);margin-bottom:4px;word-break:break-all;}
+.q{font-size:15px;font-weight:600;color:#0A3235;margin-bottom:8px;line-height:1.4;}
+.ent{margin-top:6px;}
+.ent .lbl{font-size:11px;color:#F0529C;text-transform:uppercase;font-weight:700;letter-spacing:.4px;}
+.ent .txt{font-size:14px;color:#105257;font-weight:600;}
+.ent .qid{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:rgba(10,50,53,0.6);margin-left:6px;}
+.ans{margin-top:6px;}
+.ans .lbl{font-size:11px;color:#F0529C;text-transform:uppercase;font-weight:700;letter-spacing:.4px;}
+.ans .txt{font-size:14px;color:#105257;font-weight:600;}
+details{margin-top:6px;font-size:12.5px;}
+details summary{cursor:pointer;color:#105257;}
+details ul{margin:6px 0 0 0;padding-left:18px;}
+details li{font-family:ui-monospace,Menlo,monospace;font-size:12px;line-height:1.5;}
+</style></head><body>
+<a class="up" href="index.html">&larr; back to extras</a>
+<h1>OVEN-entity train</h1>
+<div class="subtitle">Training-set samples from OVEN-entity, the entity-recognition portion added to v5_Oven posttraining. Each example pairs an image with a templated question whose answer is a Wikidata entity.</div>
+<div class="stats"><div>Total examples: <b>4,926,314</b></div><div>Showing: <b>24</b> random samples (seed=7)</div></div>
+<div class="intro">
+<b>Schema</b>
+<div class="schema">{data_id, image_id, question, entity_id, entity_text, data_split}</div>
+</div>
+<div class="grid">
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_02715931.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_02716506 &middot; oven_02715931</div>
+<div class="q">what is shown in the photo?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Family room</span><span class="qid">Q5433389</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_01264839.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_01265414 &middot; oven_01264839</div>
+<div class="q">what is shown in the photo?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Triceratops</span><span class="qid">Q14384</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_03311444.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_03312019 &middot; oven_03311444</div>
+<div class="q">which type of object is depicted in the image?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Pillow block bearing</span><span class="qid">Q26961772</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_00404480.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_00405055 &middot; oven_00404480</div>
+<div class="q">what kind of sports is shown in the image?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Hammer throw</span><span class="qid">Q184865</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_00607064.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_00607639 &middot; oven_00607064</div>
+<div class="q">what is the main content of this image?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Geum rivale</span><span class="qid">Q161625</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_04494729.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_04495304 &middot; oven_04494729</div>
+<div class="q">what is the category of this plant?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Pulsatilla</span><span class="qid">Q147764</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_00789045.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_00789620 &middot; oven_00789045</div>
+<div class="q">which category of plant is shown in the image?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Maize</span><span class="qid">Q11575</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_03067045.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_03067620 &middot; oven_03067045</div>
+<div class="q">which category of object is shown in the image?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Locket</span><span class="qid">Q1402709</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_04888205.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_04888780 &middot; oven_04888205</div>
+<div class="q">which category of plant is shown in the image?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Asplenium adiantum-nigrum</span><span class="qid">Q923786</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_00485955.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_00486530 &middot; oven_00485955</div>
+<div class="q">what kind of animal is this?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">American red squirrel</span><span class="qid">Q326976</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_04256104.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_04256679 &middot; oven_04256104</div>
+<div class="q">what is this food?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Whipped cream</span><span class="qid">Q625957</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_01800443.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_01801018 &middot; oven_01800443</div>
+<div class="q">what is this animal?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Cottontail rabbit</span><span class="qid">Q748448</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_00313961.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_00314536 &middot; oven_00313961</div>
+<div class="q">which type of building is depicted in the image?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Greenhouse</span><span class="qid">Q165044</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_00720402.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_00720977 &middot; oven_00720402</div>
+<div class="q">what is this plant?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Macrolepiota procera</span><span class="qid">Q243381</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_03637108.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_03637683 &middot; oven_03637108</div>
+<div class="q">which category of material is shown in the image?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Yarn</span><span class="qid">Q49007</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_03507307.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_03507882 &middot; oven_03507307</div>
+<div class="q">what is this vehicle?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">School bus</span><span class="qid">Q58678</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_00585414.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_00585989 &middot; oven_00585414</div>
+<div class="q">which species of plant is this?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Sisyrinchium bellum</span><span class="qid">Q4049557</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_02018252.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_02018827 &middot; oven_02018252</div>
+<div class="q">what is shown in the photo?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Bonito</span><span class="qid">Q3473576</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_00760380.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_00760955 &middot; oven_00760380</div>
+<div class="q">which species of plant is this?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Eupatorium perfoliatum</span><span class="qid">Q683940</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_04621944.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_04622519 &middot; oven_04621944</div>
+<div class="q">what is shown in the photo?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Bouteloua</span><span class="qid">Q2693100</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_03560550.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_03561125 &middot; oven_03560550</div>
+<div class="q">what is shown in the photo?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Shovel</span><span class="qid">Q7220961</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_00495279.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_00495854 &middot; oven_00495279</div>
+<div class="q">which species of plant is this?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Umbellularia</span><span class="qid">Q15933047</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_04742794.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_04743369 &middot; oven_04742794</div>
+<div class="q">what object is presented in the image?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Bamboo palm</span><span class="qid">Q4853430</span></div>
+</div></div>
+<div class="card">
+<img src="../imgs/oven_entity_train/oven_01037951.jpg" loading="lazy" alt="">
+<div class="meta">
+<div class="did">oven_entity_train_01038526 &middot; oven_01037951</div>
+<div class="q">which type of sport is depicted in the image?</div>
+<div class="ent"><span class="lbl">entity</span><br><span class="txt">Gymnastics</span><span class="qid">Q43450</span></div>
+</div></div>
+</div>
+</body></html>
