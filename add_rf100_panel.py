@@ -108,22 +108,20 @@ def build_panel(slug, panel_id, img_b64, captions, W, H):
             continue
         color = COLORS[ci % len(COLORS)]
         for bi, (x1, y1, x2, y2) in enumerate(boxes):
-            # Use 'rf-box' class so existing JS .querySelectorAll('.box') doesn't pick these up
-            # (that handler does [...b.classList].find(c=>c.startsWith('s')).slice(1) which
-            # crashes for boxes without an 's...' class — disabling all later button handlers).
+            # Use 'rf-box' class so existing JS .querySelectorAll('.box') doesn't pick these up.
+            # data-idx links to the matching rf-cap; data-phrase for tooltip.
             parts.append(
-                f'<rect class="rf-box" '
+                f'<rect class="rf-box" data-idx="{ci}" data-phrase="{cname}" '
                 f'x="{x1}" y="{y1}" width="{x2-x1}" height="{y2-y1}" '
-                f'stroke="{color}" fill="transparent" stroke-width="3"></rect>'
+                f'stroke="{color}" fill="transparent" stroke-width="3" style="cursor:pointer"></rect>'
             )
         cap_render.append((ci, cname, color, len(boxes)))
     parts.append('</svg></div>')
     parts.append(f'<div class="section-title" style="margin-top:10px">classes ({len(cap_render)})</div>')
     parts.append('<div class="caption-list">')
     for ci, cname, color, nbox in cap_render:
-        # Use 'rf-cap' class so existing .cap forEach doesn't process these
         parts.append(
-            f'<div class="rf-cap" style="border-left: 3px solid {color};padding:6px 10px;margin-bottom:4px;background:var(--cream-dark);border-radius:4px;color:var(--fg);">'
+            f'<div class="rf-cap" data-idx="{ci}" style="border-left: 3px solid {color};padding:6px 10px;margin-bottom:4px;background:var(--cream-dark);border-radius:4px;color:var(--fg);cursor:pointer;transition:all .15s;">'
             f'<b>{cname}</b> <span class="tag-bbox">({nbox} bbox{"es" if nbox>1 else ""})</span></div>'
         )
     parts.append('</div></div>')
@@ -185,6 +183,52 @@ def main():
     # 2. Insert panel before <div id="cat1_tabs"
     new_panel = f'<div id="p_0_9" class="panel" data-cat="cat0">\n{rf100_panel_inner}\n</div>\n'
     html = re.sub(r'(<div id="cat1_tabs")', new_panel + r'\1', html, count=1)
+
+    # 3. Append RF100-specific hover JS just before </body> (doesn't touch existing handlers)
+    rf100_js = """
+<script>
+// RF100 hover-highlight (scoped to .sample, mirrors original .box/.cap behavior)
+document.querySelectorAll('.rf-box').forEach(b => {
+  const sample = b.closest('.sample');
+  if (!sample) return;
+  b.addEventListener('mouseenter', () => {
+    const idx = b.dataset.idx;
+    sample.querySelectorAll('.rf-box').forEach(x => {
+      if (x.dataset.idx === idx) { x.style.opacity = '1'; x.setAttribute('stroke-width','5'); }
+      else { x.style.opacity = '0.25'; }
+    });
+    sample.querySelectorAll('.rf-cap').forEach(c => {
+      if (c.dataset.idx === idx) { c.style.background = 'var(--accent)'; c.style.color = 'var(--bg)'; }
+      else { c.style.opacity = '0.3'; }
+    });
+  });
+  b.addEventListener('mouseleave', () => {
+    sample.querySelectorAll('.rf-box').forEach(x => { x.style.opacity = ''; x.setAttribute('stroke-width','3'); });
+    sample.querySelectorAll('.rf-cap').forEach(c => { c.style.background = 'var(--cream-dark)'; c.style.color = 'var(--fg)'; c.style.opacity = ''; });
+  });
+});
+document.querySelectorAll('.rf-cap').forEach(c => {
+  const sample = c.closest('.sample');
+  if (!sample) return;
+  c.addEventListener('mouseenter', () => {
+    const idx = c.dataset.idx;
+    sample.querySelectorAll('.rf-box').forEach(x => {
+      if (x.dataset.idx === idx) { x.style.opacity = '1'; x.setAttribute('stroke-width','5'); }
+      else { x.style.opacity = '0.25'; }
+    });
+    sample.querySelectorAll('.rf-cap').forEach(x => {
+      if (x === c) { x.style.background = 'var(--accent)'; x.style.color = 'var(--bg)'; }
+      else { x.style.opacity = '0.3'; }
+    });
+  });
+  c.addEventListener('mouseleave', () => {
+    sample.querySelectorAll('.rf-box').forEach(x => { x.style.opacity = ''; x.setAttribute('stroke-width','3'); });
+    sample.querySelectorAll('.rf-cap').forEach(x => { x.style.background = 'var(--cream-dark)'; x.style.color = 'var(--fg)'; x.style.opacity = ''; });
+  });
+});
+</script>
+"""
+    html = html.replace("</body>", rf100_js + "</body>")
 
     # backup + write
     bak = INDEX.with_suffix(".html.bak_pre_rf100")
