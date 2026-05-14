@@ -108,10 +108,11 @@ def build_panel(slug, panel_id, img_b64, captions, W, H):
             continue
         color = COLORS[ci % len(COLORS)]
         for bi, (x1, y1, x2, y2) in enumerate(boxes):
-            # class "s<panel_id>" required by existing JS handler that does
-            #   const sid = [...b.classList].find(c => c.startsWith('s') && c !== 'box').slice(1)
+            # Use 'rf-box' class so existing JS .querySelectorAll('.box') doesn't pick these up
+            # (that handler does [...b.classList].find(c=>c.startsWith('s')).slice(1) which
+            # crashes for boxes without an 's...' class — disabling all later button handlers).
             parts.append(
-                f'<rect class="box s{panel_id}" data-idx="{ci}" data-phrase="{cname}" '
+                f'<rect class="rf-box" '
                 f'x="{x1}" y="{y1}" width="{x2-x1}" height="{y2-y1}" '
                 f'stroke="{color}" fill="transparent" stroke-width="3"></rect>'
             )
@@ -120,8 +121,9 @@ def build_panel(slug, panel_id, img_b64, captions, W, H):
     parts.append(f'<div class="section-title" style="margin-top:10px">classes ({len(cap_render)})</div>')
     parts.append('<div class="caption-list">')
     for ci, cname, color, nbox in cap_render:
+        # Use 'rf-cap' class so existing .cap forEach doesn't process these
         parts.append(
-            f'<div class="cap" data-sample="{panel_id}" data-idx="{ci}" style="border-left: 3px solid {color}">'
+            f'<div class="rf-cap" style="border-left: 3px solid {color};padding:6px 10px;margin-bottom:4px;background:var(--cream-dark);border-radius:4px;color:var(--fg);">'
             f'<b>{cname}</b> <span class="tag-bbox">({nbox} bbox{"es" if nbox>1 else ""})</span></div>'
         )
     parts.append('</div></div>')
