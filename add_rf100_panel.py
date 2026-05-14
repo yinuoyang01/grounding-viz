@@ -131,15 +131,27 @@ def build_rf100_full_panel(cat_to_datasets, samples_per_cat: int = 5):
     """Build the full p_0_9 panel with sub-tabs for 7 categories,
     showing up to `samples_per_cat` distinct datasets per category."""
     cats = sorted(cat_to_datasets.keys())
+    # count total images per category
+    import tarfile, glob
+    cat_imgs = {}
+    for cat in cats:
+        n = 0
+        for slug in cat_to_datasets[cat]:
+            for tar_path in glob.glob(f"/weka/oe-training-default/oe-encoder/roboflow100_tars/{slug}/*.tar"):
+                with tarfile.open(tar_path) as t:
+                    n += sum(1 for m in t.getmembers() if m.name.endswith('.jpg'))
+        cat_imgs[cat] = n
+    total_imgs = sum(cat_imgs.values())
     panel_html = []
-    panel_html.append('<div class="dataset-intro"><div class="intro-title"><b>RF100 (Roboflow-100)</b> &nbsp;~225K samples · 100 datasets · 7 categories</div>'
+    panel_html.append(f'<div class="dataset-intro"><div class="intro-title"><b>RF100 (Roboflow-100)</b> &nbsp;{total_imgs:,} images · 100 datasets · 7 categories</div>'
                      f'<div class="intro-desc">Diverse bbox grounding benchmark covering aerial, documents, electromagnetic, microscopic, real-world, underwater, video-games domains. '
                      f'Up to {samples_per_cat} random datasets shown per category.</div>'
                      '<div class="intro-meta">36 GB · <code>/weka/oe-training-default/oe-encoder/roboflow100_tars</code></div></div>')
     panel_html.append('<div class="sub-tabs">')
     for ci, cat in enumerate(cats):
         active = " active" if ci == 0 else ""
-        panel_html.append(f'<button class="sub-tab{active}" data-sub="sub_rf100_{ci}">{cat} ({len(cat_to_datasets[cat])})</button>')
+        n_imgs = cat_imgs.get(cat, 0)
+        panel_html.append(f'<button class="sub-tab{active}" data-sub="sub_rf100_{ci}">{cat} · {len(cat_to_datasets[cat])} ds · {n_imgs:,} imgs</button>')
     panel_html.append('</div>')
     sample_idx = 0  # global counter for unique data-sample-idx across all sub-panels
     for ci, cat in enumerate(cats):
