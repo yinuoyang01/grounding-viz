@@ -95,7 +95,7 @@ def build_panel(slug, panel_id, img_b64, captions, W, H):
     """Build HTML for one sub-panel showing the RF100 sample."""
     # Render image + svg overlays
     parts = []
-    parts.append(f'<div class="sample" data-sample-idx="0" style="margin-bottom:20px">')
+    parts.append(f'<div class="sample" data-sample-idx="{panel_id}" style="margin-bottom:20px">')
     parts.append(f'<div style="font-weight:600;margin-bottom:6px"><code>{slug}</code></div>')
     parts.append(f'<div class="img-wrap" style="width:{W}px;height:{H}px;position:relative">')
     parts.append(f'<img src="data:image/jpeg;base64,{img_b64}" style="width:100%;height:100%;display:block;border:1px solid var(--line);border-radius:4px;">')
@@ -108,8 +108,10 @@ def build_panel(slug, panel_id, img_b64, captions, W, H):
             continue
         color = COLORS[ci % len(COLORS)]
         for bi, (x1, y1, x2, y2) in enumerate(boxes):
+            # class "s<panel_id>" required by existing JS handler that does
+            #   const sid = [...b.classList].find(c => c.startsWith('s') && c !== 'box').slice(1)
             parts.append(
-                f'<rect class="box" data-cap-idx="{ci}" '
+                f'<rect class="box s{panel_id}" data-idx="{ci}" data-phrase="{cname}" '
                 f'x="{x1}" y="{y1}" width="{x2-x1}" height="{y2-y1}" '
                 f'stroke="{color}" fill="transparent" stroke-width="3"></rect>'
             )
@@ -119,7 +121,7 @@ def build_panel(slug, panel_id, img_b64, captions, W, H):
     parts.append('<div class="caption-list">')
     for ci, cname, color, nbox in cap_render:
         parts.append(
-            f'<div class="cap" data-sample="0" data-idx="{ci}" style="border-left: 3px solid {color}">'
+            f'<div class="cap" data-sample="{panel_id}" data-idx="{ci}" style="border-left: 3px solid {color}">'
             f'<b>{cname}</b> <span class="tag-bbox">({nbox} bbox{"es" if nbox>1 else ""})</span></div>'
         )
     parts.append('</div></div>')
