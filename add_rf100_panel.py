@@ -59,8 +59,7 @@ def pick_sample_from_tar(slug):
                 meta = json.loads(meta_f.read())
                 img = PIL.Image.open(io.BytesIO(img_bytes))
                 W, H = img.size
-                # resize-down for HTML inline
-                MAX_W = 600
+                MAX_W = 400  # smaller resize to keep HTML small with multiple samples per cat
                 if W > MAX_W:
                     new_h = int(H * MAX_W / W)
                     img = img.resize((MAX_W, new_h))
@@ -128,37 +127,38 @@ def build_panel(slug, panel_id, img_b64, captions, W, H):
     return "".join(parts)
 
 
-def build_rf100_full_panel(cat_to_datasets):
-    """Build the full p_0_9 panel with sub-tabs for 7 categories."""
+def build_rf100_full_panel(cat_to_datasets, samples_per_cat: int = 5):
+    """Build the full p_0_9 panel with sub-tabs for 7 categories,
+    showing up to `samples_per_cat` distinct datasets per category."""
     cats = sorted(cat_to_datasets.keys())
     panel_html = []
     panel_html.append('<div class="dataset-intro"><div class="intro-title"><b>RF100 (Roboflow-100)</b> &nbsp;~225K samples · 100 datasets · 7 categories</div>'
-                     '<div class="intro-desc">Diverse bbox grounding benchmark covering aerial, documents, electromagnetic, microscopic, real-world, underwater, video-games domains. '
-                     'One random example per category shown below.</div>'
+                     f'<div class="intro-desc">Diverse bbox grounding benchmark covering aerial, documents, electromagnetic, microscopic, real-world, underwater, video-games domains. '
+                     f'Up to {samples_per_cat} random datasets shown per category.</div>'
                      '<div class="intro-meta">36 GB · <code>/weka/oe-training-default/oe-encoder/roboflow100_tars</code></div></div>')
-    # sub-tabs
     panel_html.append('<div class="sub-tabs">')
     for ci, cat in enumerate(cats):
         active = " active" if ci == 0 else ""
         panel_html.append(f'<button class="sub-tab{active}" data-sub="sub_rf100_{ci}">{cat} ({len(cat_to_datasets[cat])})</button>')
     panel_html.append('</div>')
-    # sub-panels
+    sample_idx = 0  # global counter for unique data-sample-idx across all sub-panels
     for ci, cat in enumerate(cats):
         active = " active" if ci == 0 else ""
         panel_html.append(f'<div data-sub="sub_rf100_{ci}" class="sub-panel{active}">')
-        # pick first dataset that we can sample successfully
-        slugs = cat_to_datasets[cat]
+        slugs = list(cat_to_datasets[cat])
         random.shuffle(slugs)
-        found = False
-        for slug in slugs[:5]:
+        found_count = 0
+        for slug in slugs:
+            if found_count >= samples_per_cat:
+                break
             sample = pick_sample_from_tar(slug)
             if sample is None:
                 continue
             img_b64, captions, W, H = sample
-            panel_html.append(build_panel(slug, f"sub_rf100_{ci}", img_b64, captions, W, H))
-            found = True
-            break
-        if not found:
+            panel_html.append(build_panel(slug, f"rf100_{sample_idx}", img_b64, captions, W, H))
+            sample_idx += 1
+            found_count += 1
+        if found_count == 0:
             panel_html.append(f'<div class="empty">no usable sample found for {cat}</div>')
         panel_html.append('</div>')
     return "".join(panel_html)
