@@ -99,7 +99,7 @@ def build_panel(slug, panel_id, img_b64, captions, W, H):
     parts.append(f'<div class="img-wrap" style="width:{W}px;height:{H}px;position:relative">')
     parts.append(f'<img src="data:image/jpeg;base64,{img_b64}" style="width:100%;height:100%;display:block;border:1px solid var(--line);border-radius:4px;">')
     # SVG overlay (viewBox in 0-999 native grid)
-    parts.append(f'<svg class="overlay" viewBox="0 0 999 999" preserveAspectRatio="none" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none">')
+    parts.append(f'<svg class="overlay" viewBox="0 0 999 999" preserveAspectRatio="none" style="position:absolute;top:0;left:0;width:100%;height:100%">')
     cap_render = []
     for ci, cap_str in enumerate(captions):
         cname, boxes = parse_v3_caption(cap_str)
