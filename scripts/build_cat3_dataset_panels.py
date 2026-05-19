@@ -39,16 +39,15 @@ TAR_ROOTS = {
 }
 
 DATASETS = [
-    # (label,      out_subdir,           schema,   pretty)
-    ('vg',         'vg_filtered',        'legacy', 'Visual Genome'),
-    ('openimages', 'openimages_filtered','legacy', 'OpenImages V7'),
-    ('pixmo',      'pixmo_filtered',     'legacy', 'Pixmo Point'),
-    ('grit',       'grit_v2_filtered',   'new',    'GRIT v2'),
-    ('cc3m',       'cc3m_filtered',      'new',    'cc3m'),
-    ('cc12m',      'cc12m_filtered',     'new',    'cc12m'),
-    ('seeclick',   'seeclick_filtered',  'new',    'SeeClick'),
-    ('rf100',      'rf100_filtered',     'new',    'RF100'),
-    ('molmoweb_sg', '', 'raw_arrow', 'MolmoWeb-SyntheticGround'),
+    # (label,      out_subdir,            schema,   pretty)
+    ('vg',         'vg_filtered',         'legacy', 'Visual Genome'),
+    ('openimages', 'openimages_filtered', 'legacy', 'OpenImages V7'),
+    ('pixmo',      'pixmo_filtered',      'legacy', 'Pixmo Point'),
+    ('grit',       'grit_v2_filtered',    'new',    'GRIT v2'),
+    ('cc3m',       'cc3m_filtered_boost', 'new',    'cc3m'),
+    ('cc12m',      'cc12m_filtered',      'new',    'cc12m'),
+    ('seeclick',   'seeclick_filtered',   'new',    'SeeClick'),
+    ('rf100',      'rf100_filtered',      'new',    'RF100'),
 ]
 
 MOLMOWEB_SG_ROOT = '/weka/oe-training-default/zixianm/molmoweb-datasets/MolmoWeb-SyntheticGround'
@@ -112,9 +111,11 @@ def extract_for_ds(ds, tar_path, key_in_tar):
     return extract_image_from_tar(tar_path, key_in_tar)
 
 
-def load_rejected(ds, out_subdir, schema, max_pool=2000, seed=0):
-    """Return list of rejected (F1<1) records normalized to {tar, key_in_tar, phrase, gt, pred, kind, f1, ...}.
+def load_rejected(ds, out_subdir, schema, max_pool=2000, seed=0, include_f1_eq_1=False):
+    """Return list of records normalized to {tar, key_in_tar, phrase, gt, pred, kind, f1, ...}.
 
+    If include_f1_eq_1 is False: F1<1 only (legacy behavior).
+    If include_f1_eq_1 is True:  return ALL records (caller can interleave by f1).
     Bijection contract: deduplicates on composite key (tar, key_in_tar, phrase). Drops literal
     duplicates that filter writes (pixmo's worker shards have ~4% overlap from preempt-resume).
     Pool is shuffled deterministically (seed) for unbiased subsampling.
@@ -133,7 +134,7 @@ def load_rejected(ds, out_subdir, schema, max_pool=2000, seed=0):
                 if schema == 'legacy':
                     info = r.get('info') or {}
                     f1 = info.get('f1', 1.0)
-                    if f1 >= 1.0 - 1e-9: continue
+                    if not include_f1_eq_1 and f1 >= 1.0 - 1e-9: continue
                     rec = {
                         'tar': r['shard'], 'key_in_tar': r['key'],
                         'phrase': r.get('phrase', ''),
@@ -146,7 +147,7 @@ def load_rejected(ds, out_subdir, schema, max_pool=2000, seed=0):
                     }
                 else:
                     f1 = r.get('f1', 1.0)
-                    if f1 >= 1.0 - 1e-9: continue
+                    if not include_f1_eq_1 and f1 >= 1.0 - 1e-9: continue
                     if not r.get('pred_pts'): continue
                     tar, key_in_tar = parse_new_key(r['key'])
                     if not tar: continue
@@ -272,9 +273,21 @@ def render_molmoweb_sg_panel(ds, pretty, n_samples, seed):
 
 
 def render_panel(ds, out_subdir, schema, pretty, n_samples, seed):
-    pool, n_files = load_rejected(ds, out_subdir, schema, max_pool=n_samples * 10, seed=seed)
-    n_total = len(pool)
-    picks = pool[:n_samples]
+    # Load BOTH F1<1 and F1=1 then interleave evenly. Splits half/half within n_samples.
+    half = max(1, n_samples // 2)
+    rejected_pool, n_files = load_rejected(ds, out_subdir, schema,
+                                           max_pool=half * 10, seed=seed)
+    # accepted (F1=1) sampled separately
+    all_pool, _ = load_rejected(ds, out_subdir, schema,
+                                max_pool=n_samples * 20, seed=seed + 1, include_f1_eq_1=True)
+    accepted_pool = [r for r in all_pool if r['f1'] >= 1.0 - 1e-9][:half]
+    # Interleave rejected and accepted: r, a, r, a, ...
+    rejected_pool = rejected_pool[:half]
+    picks = []
+    for i in range(max(len(rejected_pool), len(accepted_pool))):
+        if i < len(rejected_pool): picks.append(rejected_pool[i])
+        if i < len(accepted_pool): picks.append(accepted_pool[i])
+    n_total_rej = len(rejected_pool); n_total_acc = len(accepted_pool)
     cards = []
     n_done = n_err = 0
     for rec in picks:
@@ -287,10 +300,12 @@ def render_panel(ds, out_subdir, schema, pretty, n_samples, seed):
                                gt_norm=GT_NORM_BY_DS.get(ds, False))
             phrase = html.escape((rec['phrase'] or '')[:300])
             pred_raw = html.escape((rec.get('pred_raw') or '')[:300])
-            ST_SAMPLE = 'display:grid;grid-template-columns:400px 1fr;gap:16px;padding:12px;margin:8px 0;background:#fff;border:1px solid rgba(10,50,53,0.15);border-radius:6px'
+            # Cream background to match site theme; metrics on two lines
+            ST_SAMPLE = 'display:grid;grid-template-columns:400px 1fr;gap:16px;padding:12px;margin:8px 0;background:var(--cream-dark,#F1E4D1);border:1px solid rgba(10,50,53,0.15);border-radius:8px'
             ST_META = 'color:rgba(10,50,53,0.55);font-family:ui-monospace,Menlo,monospace;font-size:11px;margin-bottom:6px'
             ST_TITLE = 'font-weight:700;color:#105257;font-size:11px;margin-top:8px;text-transform:uppercase;letter-spacing:.04em'
             ST_TEXT = 'color:#0A3235;font-size:13px;margin-top:2px'
+            f1_bg = '#0FCB8C' if rec['f1'] >= 1.0 - 1e-9 else '#F0529C'  # green if F1=1, pink if F1<1
             cards.append(
                 f'<div class="sample" style="{ST_SAMPLE}">\n'
                 f'  <div class="img-wrap" style="width:400px"><img src="data:image/jpeg;base64,{b64}" style="width:100%;border-radius:4px"/></div>\n'
@@ -299,7 +314,8 @@ def render_panel(ds, out_subdir, schema, pretty, n_samples, seed):
                 f'    <div style="{ST_TITLE}">phrase</div>\n'
                 f'    <div style="{ST_TEXT}"><b>{phrase}</b></div>\n'
                 f'    <div style="{ST_TITLE}">metrics</div>\n'
-                f'    <div style="{ST_TEXT}"><span style="background:#F0529C;color:#FAF2E9;font-weight:700;padding:2px 8px;border-radius:4px;font-size:11px">F1={rec["f1"]:.2f}</span> &nbsp; P={rec["precision"]:.2f} &nbsp; R={rec["recall"]:.2f} &nbsp; n_pred={rec["n_pred"]} &nbsp; n_gt={rec["n_gt"]}</div>\n'
+                f'    <div style="{ST_TEXT}"><span style="background:{f1_bg};color:#FAF2E9;font-weight:700;padding:2px 8px;border-radius:4px;font-size:11px">F1={rec["f1"]:.2f}</span> &nbsp; P={rec["precision"]:.2f} &nbsp; R={rec["recall"]:.2f}</div>\n'
+                f'    <div style="{ST_TEXT}">n_pred={rec["n_pred"]} &nbsp; n_gt={rec["n_gt"]}</div>\n'
                 f'    <div style="{ST_TITLE}">overlay</div>\n'
                 f'    <div style="{ST_TEXT};font-size:11px"><span style="color:#0FCB8C;font-weight:600">●</span> GT &nbsp;<span style="color:#F0529C;font-weight:600">●</span> Molmo pred</div>\n'
                 + (f'    <div style="{ST_TITLE}">pred_raw</div>\n    <div style="{ST_TEXT};font-family:ui-monospace,Menlo,monospace;font-size:11px">{pred_raw}</div>\n' if pred_raw else '')
@@ -308,18 +324,18 @@ def render_panel(ds, out_subdir, schema, pretty, n_samples, seed):
             n_done += 1
         except Exception:
             n_err += 1
-    print(f'  {ds}: pool={n_total} from {n_files} files, rendered {n_done}, err {n_err}', flush=True)
+    print(f'  {ds}: rejected={n_total_rej} accepted={n_total_acc} from {n_files} files, rendered {n_done}, err {n_err}', flush=True)
     if n_files == 0:
         body = '<div style="padding:20px;color:rgba(10,50,53,0.5)">No filter output yet (job still pending or running with no shards completed).</div>'
     elif n_done == 0:
-        body = f'<div style="padding:20px;color:rgba(10,50,53,0.5)">{n_total:,} rejected samples in {n_files} jsonl files; render failed (tar resolution).</div>'
+        body = f'<div style="padding:20px;color:rgba(10,50,53,0.5)">{n_total_rej+n_total_acc:,} samples in {n_files} jsonl files; render failed (tar resolution).</div>'
     else:
         body = f'<div style="margin-top:8px">{"".join(cards)}</div>'
     intro = (
         '<div class="dataset-intro">'
-        f'<div class="intro-title"><b>{pretty} — Molmo rejected samples (F1&lt;1)</b></div>'
-        f'<div class="intro-desc">Red = Molmo predicted point. Green = ground-truth (bbox + center, or point). Random sample from rejected pool — these are records the filter discarded.</div>'
-        f'<div class="intro-meta">{n_total:,} rejected (F1&lt;1) across {n_files} shard jsonls · showing {n_done} random</div>'
+        f'<div class="intro-title"><b>{pretty} — Molmo filter outputs (interleaved F1=1 and F1&lt;1)</b></div>'
+        f'<div class="intro-desc">Red = Molmo predicted point. Green = ground-truth. Each card shows F1 in pink chip (Molmo missed GT) or green chip (Molmo matched GT). Cards alternate between rejected (F1&lt;1) and accepted (F1=1).</div>'
+        f'<div class="intro-meta">{n_total_rej:,} rejected + {n_total_acc:,} accepted across {n_files} shard jsonls · showing {n_done} interleaved</div>'
         '</div>'
     )
     return f'<div id="p_3_{ds}" class="panel" data-cat="cat3">\n{intro}\n{body}\n</div>\n', pretty
