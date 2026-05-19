@@ -18,7 +18,7 @@ from collections import defaultdict
 from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from render_filter import draw_red_dots, extract_image_from_tar, GT_NORM_BY_DS
+from render_filter import draw_red_dots, render_yellow_red, extract_image_from_tar, GT_NORM_BY_DS
 from build_cat3_dataset_panels import TAR_ROOTS, resolve_tar, extract_for_ds
 
 OUT = '/weka/oe-training-default/zixianm/yinuoy/grounding_rm/eval/results/red_5k_v3'
@@ -148,9 +148,10 @@ def render_with_gt(ds, rec, max_side=400):
         gt = rec.get('gt', [])
         gt_bboxes = gt if kind == 'bbox' else None
         gt_points = gt if kind == 'point' else None
-        im = draw_red_dots(img_bytes, rec.get('pred', []),
-                           gt_bboxes=gt_bboxes, gt_points=gt_points, max_side=max_side,
-                           gt_norm=GT_NORM_BY_DS.get(ds, False))
+        # Use YELLOW GT + RED pred to match what judges actually saw at judge time.
+        im = render_yellow_red(img_bytes, rec.get('pred', []),
+                               gt_bboxes=gt_bboxes, gt_points=gt_points, max_side=max_side,
+                               gt_norm=GT_NORM_BY_DS.get(ds, False))
         buf = io.BytesIO(); im.save(buf, 'JPEG', quality=80)
         return base64.b64encode(buf.getvalue()).decode()
     except Exception:
