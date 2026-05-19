@@ -158,9 +158,22 @@ def render_with_gt(ds, rec, max_side=400):
 
 
 def chip(label, verdict):
-    bg = {'yes': '#0FCB8C', 'no': '#F0529C', 'unclear': '#B11BE8', 'error': '#666'}.get(verdict, '#999')
+    bg = {'yes': '#0FCB8C', 'no': '#F0529C', 'unclear': '#B11BE8',
+          'mask_ok': '#0FCB8C', 'mask_wrong': '#F0529C', 'mask_unclear': '#B11BE8',
+          'error': '#666', 'n/a': '#999'}.get(verdict, '#999')
     return (f'<span style="background:{bg};color:#FAF2E9;padding:2px 7px;border-radius:4px;'
             f'font-size:10px;font-weight:700;margin-right:4px">{html.escape(label)}: {html.escape(verdict)}</span>')
+
+
+def judge_chips(name, jr):
+    """Return two chips for one judge: mask_verdict + molmo_verdict on same line."""
+    if not jr: return ''
+    mv = jr.get('mask_verdict', '?')
+    mov = jr.get('molmo_verdict', '?')
+    return (f'<div style="margin-bottom:3px">'
+            f'<span style="display:inline-block;width:80px;font-size:11px;font-weight:600;color:#0A3235">{html.escape(name)}:</span>'
+            f'{chip("mask", mv)}{chip("molmo", mov)}'
+            f'</div>')
 
 
 def render_card(rec_m, vg, vq, vi, vmm):
@@ -179,10 +192,10 @@ def render_card(rec_m, vg, vq, vi, vmm):
     pred_str = html.escape(fmt_coords(rec_m.get('pred', [])))
     pred_raw = html.escape((rec_m.get('pred_raw') or '')[:200])
     chips = ''
-    if vg: chips += chip('GPT-5', vg['verdict'])
-    if vq: chips += chip('Qwen', vq['verdict'])
-    if vi: chips += chip('InternVL', vi['verdict'])
-    if vmm: chips += chip('GLM', vmm['verdict'])
+    if vg:  chips += judge_chips('GPT-5', vg)
+    if vq:  chips += judge_chips('Qwen', vq)
+    if vi:  chips += judge_chips('InternVL', vi)
+    if vmm: chips += judge_chips('GLM', vmm)
     reasons = []
     for jn, jr in [('GPT-5', vg), ('Qwen', vq), ('InternVL', vi), ('GLM', vmm)]:
         if jr and jr.get('reason'):
