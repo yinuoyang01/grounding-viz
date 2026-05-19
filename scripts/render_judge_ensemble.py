@@ -200,7 +200,7 @@ def render_card(rec_m, vg, vq, vi, vmm):
     reasons = []
     for jn, jr in [('GPT-5', vg), ('Qwen', vq), ('InternVL', vi), ('GLM', vmm)]:
         if jr and jr.get('reason'):
-            rs = html.escape(jr['reason'][:160])
+            rs = html.escape(jr['reason'])
             reasons.append(f'<div style="font-size:10px;color:rgba(10,50,53,0.65);margin-top:2px"><b>{jn}:</b> {rs}</div>')
     reasons_html = ''.join(reasons[:4])
     ST = 'display:grid;grid-template-columns:400px 1fr;gap:16px;padding:12px;margin:8px 0;background:#fff;border:1px solid rgba(10,50,53,0.15);border-radius:6px'
