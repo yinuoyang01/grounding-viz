@@ -78,6 +78,22 @@ KNOWLEDGE_DATASETS = {
             '546,986 entities / ~2.3M training samples', '25 GB JSON + 1.6 TB images + 4.7 TB tars'),
 }
 
+# v7 new knowledge datasets — image + entity-first short caption
+# (kind: 'gldv2'/'inaturalist' read short_captions JSONL; 'visualnews' reads data.json)
+SHORT_CAP_DIR = '/weka/oe-training-default/chenhaoz/data_retrieval/short_captions'
+VN_ROOT = '/weka/oe-training-default/oe-encoder/visualnews/extracted'
+KNOWLEDGE_EXTRA = {
+    'gldv2': ('gldv2',
+              'Google Landmarks v2 — LABELED subset (train_clean, label != null). Caption = Qwen3-VL short caption, landmark name in first words.',
+              '~1.58M labeled images / 81,313 landmarks', f'{SHORT_CAP_DIR}/gldv2_s*.jsonl'),
+    'inaturalist2018': ('inaturalist',
+              'iNaturalist 2018 — 8,142 species (plants/animals/fungi). Caption = Qwen3-VL short caption, species binomial in first words.',
+              '461,939 images / 8,142 species', f'{SHORT_CAP_DIR}/inaturalist2018_s*.jsonl'),
+    'visualnews': ('visualnews',
+              'VisualNews — news image/caption pairs (BBC, Guardian, USA Today, Washington Post). Caption = original human-written news caption.',
+              '1,259,732 image-caption pairs', f'{VN_ROOT}/origin/data.json'),
+}
+
 # Grounding data filtering (Molmo2-4B + SAM2.1) — output JSONL preview
 FILTER_DATASETS = {
     'Visual Genome': ('/weka/oe-training-default/oe-encoder/grounding_filter_molmo2/vg_filtered',
@@ -680,6 +696,72 @@ def render_knowledge_sample(s, sid):
 </div>'''
 
 
+def sample_knowledge_extra(kind, n):
+    """Sample n (img_bytes, caption) from gldv2/inaturalist short-cap JSONL or visualnews data.json."""
+    samples = []
+    if kind in ('gldv2', 'inaturalist'):
+        glob_pat = f'{SHORT_CAP_DIR}/gldv2_s*.jsonl' if kind == 'gldv2' \
+                   else f'{SHORT_CAP_DIR}/inaturalist2018_s*.jsonl'
+        files = sorted(glob(glob_pat))
+        random.shuffle(files)
+        for jf in files:
+            if len(samples) >= n: break
+            try:
+                rows = [json.loads(l) for l in open(jf)]
+            except Exception:
+                continue
+            random.shuffle(rows)
+            for r in rows:
+                if len(samples) >= n: break
+                if kind == 'gldv2' and not r.get('label'):
+                    continue
+                cap = r.get('short_caption', '')
+                p = r.get('path', '')
+                if not cap or not os.path.exists(p): continue
+                try:
+                    with open(p, 'rb') as fh: img = fh.read()
+                except Exception:
+                    continue
+                samples.append({'img_bytes': img, 'caption': cap,
+                                'label': r.get('label', ''), 'id': r.get('local_idx', '')})
+    elif kind == 'visualnews':
+        try:
+            data = json.load(open(f'{VN_ROOT}/origin/data.json'))
+        except Exception:
+            return [], 0
+        random.shuffle(data)
+        for r in data:
+            if len(samples) >= n: break
+            cap = (r.get('caption') or '').strip()
+            if not cap: continue
+            p = os.path.join(VN_ROOT, 'origin', r['image_path'].lstrip('./'))
+            if not os.path.exists(p): continue
+            try:
+                with open(p, 'rb') as fh: img = fh.read()
+            except Exception:
+                continue
+            samples.append({'img_bytes': img, 'caption': cap,
+                            'label': r.get('source', ''), 'id': r.get('id', '')})
+    return samples, len(samples)
+
+
+def render_knowledge_extra(s, sid):
+    b64, (w, h) = encode_image(s['img_bytes'])
+    if not b64: return ''
+    meta = f"id={escape(str(s['id']))}"
+    if s.get('label'): meta += f" · {escape(str(s['label']))}"
+    return f'''<div class="sample" data-sample-idx="{sid}">
+  <div class="img-wrap">
+    <img src="data:image/jpeg;base64,{b64}" style="max-width:100%;height:auto;border-radius:8px;border:1px solid rgba(10,50,53,0.15)">
+  </div>
+  <div>
+    <div class="sample-meta">{meta}</div>
+    <div class="section-title">caption</div>
+    <div class="caption-text">{escape(s['caption'])}</div>
+  </div>
+</div>'''
+
+
 def sample_som_jsonl(jsonl_path, n):
     """Read SOM K=2 jsonl, return up to n records (with image path)."""
     if not os.path.isfile(jsonl_path):
@@ -988,6 +1070,10 @@ def build():
         print(f'  [knowledge] sampling {name}...')
         samples, _ = sample_knowledge(path, SAMPLES)
         cat_know.append((name, samples, render_knowledge_sample, (desc, sc, size, path)))
+    for name, (kind, desc, sc, size) in KNOWLEDGE_EXTRA.items():
+        print(f'  [knowledge/extra] sampling {name}...')
+        samples, _ = sample_knowledge_extra(kind, SAMPLES)
+        cat_know.append((name, samples, render_knowledge_extra, (desc, sc, size, size)))
     structure.append(('Knowledge', cat_know))
 
     # Grounding data filtering — show 4 datasets
