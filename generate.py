@@ -1128,10 +1128,14 @@ h1{margin:0 0 8px;color:var(--fg);}
 .ds-tabs.active{display:flex;}
 .ds-tab{padding:8px 14px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-size:13px;border-radius:6px;color:var(--fg);}
 .ds-tab.active{background:var(--accent2);color:var(--bg);border-color:var(--accent2);}
-.grp-tabs{display:none;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+/* L2 group tabs — identical style to ds-tabs so L2 is consistent across all categories */
+.grp-tabs{display:none;gap:6px;flex-wrap:wrap;margin-bottom:16px;border-bottom:1px solid var(--line);padding-bottom:6px;}
 .grp-tabs.active{display:flex;}
-.grp-tab{padding:6px 14px;border:1px solid var(--accent);background:var(--bg);cursor:pointer;font-size:13px;font-weight:600;border-radius:14px;color:var(--accent);}
-.grp-tab.active{background:var(--accent);color:var(--bg);}
+.grp-tab{padding:8px 14px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-size:13px;border-radius:6px;color:var(--fg);}
+.grp-tab.active{background:var(--accent2);color:var(--bg);border-color:var(--accent2);}
+/* L3 dataset tabs (only inside a grouped category) — smaller, clearly subordinate to L2 */
+.ds-tabs[data-grp-of] .ds-tab{padding:4px 10px;font-size:11px;border-radius:5px;border-style:dashed;}
+.ds-tabs[data-grp-of] .ds-tab.active{background:var(--accent);color:var(--bg);border-color:var(--accent);border-style:solid;}
 .panel{display:none;}
 .panel.active{display:block;}
 .dataset-intro{background:var(--cream-dark);padding:14px 18px;border-radius:8px;margin-bottom:16px;color:var(--fg);border-left:4px solid var(--accent2);}
