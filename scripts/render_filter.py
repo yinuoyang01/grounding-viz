@@ -69,16 +69,32 @@ def extract_image_from_tar(tar_path, key):
     return None
 
 
+def _xy_bbox(bb, gt_order):
+    """Normalize a GT bbox to [x1,y1,x2,y2]. gt_order 'yx' means stored [y1,x1,y2,x2]."""
+    if gt_order == 'yx':
+        return [bb[1], bb[0], bb[3], bb[2]]
+    return list(bb[:4])
+
+
+def _xy_point(pt, gt_order):
+    """Normalize a GT point to (x,y). gt_order 'yx' means stored (y,x)."""
+    if gt_order == 'yx':
+        return pt[1], pt[0]
+    return pt[0], pt[1]
+
+
 def render_yellow_red(img_bytes, pred_pts, gt_bboxes=None, gt_points=None,
                        gt_norm=False, pred_norm=False, max_side=1024,
                        radius=6, yellow=(255, 220, 0), red=(220, 30, 60),
-                       yellow_alpha=80):
+                       yellow_alpha=80, gt_order='xy'):
     """Render judge-style image: YELLOW translucent GT region + RED pred dots.
 
     For bbox GT: translucent yellow fill + solid yellow border.
     For point GT: solid yellow filled circle.
     For pred: solid red filled circle.
 
+    gt_order: 'xy' if GT stored [x1,y1,x2,y2]/(x,y); 'yx' if [y1,x1,y2,x2]/(y,x)
+              (the Molmo row-major convention — vg/openimages/pixmo).
     Used as input to 2-stage VLM judge (mask_verdict + molmo_verdict).
     """
     from PIL import ImageDraw
@@ -98,12 +114,16 @@ def render_yellow_red(img_bytes, pred_pts, gt_bboxes=None, gt_points=None,
 
     if gt_bboxes:
         for bb in gt_bboxes:
+            bb = _xy_bbox(bb, gt_order)
             x1, y1 = _scale(bb[0], bb[1], gt_norm)
             x2, y2 = _scale(bb[2], bb[3], gt_norm)
+            x1, x2 = min(x1, x2), max(x1, x2)
+            y1, y2 = min(y1, y2), max(y1, y2)
             draw.rectangle([x1, y1, x2, y2], fill=(*yellow, yellow_alpha),
                            outline=(*yellow, 255), width=2)
     if gt_points:
-        for (gx, gy) in gt_points:
+        for pt in gt_points:
+            gx, gy = _xy_point(pt, gt_order)
             x, y = _scale(gx, gy, gt_norm)
             r = radius + 1
             draw.ellipse([x - r, y - r, x + r, y + r],
@@ -117,12 +137,14 @@ def render_yellow_red(img_bytes, pred_pts, gt_bboxes=None, gt_points=None,
 
 
 def draw_red_dots(img_bytes, pred_pts, gt_bboxes=None, gt_points=None,
-                  radius=5, max_side=1024, gt_norm=None, pred_norm=False):
+                  radius=5, max_side=1024, gt_norm=None, pred_norm=False,
+                  gt_order='xy'):
     """Red dot for each Molmo pred; green dot/box for each GT.
 
     gt_norm: explicit per-dataset flag — True if GT coords are 0-999 normalized,
              False if pixel. Required when gt_bboxes/gt_points is set. (No more
              auto-detect, which was unreliable on large images.)
+    gt_order: 'xy' if GT stored [x1,y1,x2,y2]/(x,y); 'yx' if [y1,x1,y2,x2]/(y,x).
     pred_norm: True if Molmo pred_pts are 0-999 normalized (NEVER for our filter
                pipeline, which always converts pred to pixel before storing).
     """
@@ -146,14 +168,18 @@ def draw_red_dots(img_bytes, pred_pts, gt_bboxes=None, gt_points=None,
 
     if gt_bboxes:
         for bb in gt_bboxes:
+            bb = _xy_bbox(bb, gt_order)
             x1, y1 = _scale(bb[0], bb[1], gt_norm)
             x2, y2 = _scale(bb[2], bb[3], gt_norm)
+            x1, x2 = min(x1, x2), max(x1, x2)
+            y1, y2 = min(y1, y2), max(y1, y2)
             draw.rectangle([x1, y1, x2, y2], outline=GREEN, width=2)
             cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
             draw.ellipse([cx - radius, cy - radius, cx + radius, cy + radius],
                          fill=GREEN, outline=(255, 255, 255), width=2)
     if gt_points:
-        for (gx, gy) in gt_points:
+        for pt in gt_points:
+            gx, gy = _xy_point(pt, gt_order)
             x, y = _scale(gx, gy, gt_norm)
             draw.ellipse([x - radius, y - radius, x + radius, y + radius],
                          fill=GREEN, outline=(255, 255, 255), width=2)
@@ -175,6 +201,22 @@ GT_NORM_BY_DS = {
     'cc12m':      False,  # pixel
     'seeclick':   False,  # pixel
     'rf100':      False,  # pixel
+}
+
+# Per-dataset GT coordinate ORDER. 'yx' = Molmo row-major [y1,x1,y2,x2]/(y,x);
+# 'xy' = standard [x1,y1,x2,y2]/(x,y).  All CONFIRMED May 20:
+#   vg/openimages/pixmo 'yx' — visual check (red shirt / cake / telephone) + bounds.
+#   grit_v2/cc3m/cc12m/rf100/seeclick 'xy' — statistical bounds check (coord0 ≤ W always).
+GT_ORDER_BY_DS = {
+    'vg':         'yx',
+    'openimages': 'yx',
+    'pixmo':      'yx',
+    'grit':       'xy',
+    'grit_v2':    'xy',
+    'cc3m':       'xy',
+    'cc12m':      'xy',
+    'seeclick':   'xy',
+    'rf100':      'xy',
 }
 
 
@@ -218,7 +260,8 @@ def _render_one(args_tup):
         gt_bboxes = gt if kind == 'bbox' else None
         gt_points = gt if kind == 'point' else None
         im = draw_red_dots(img_bytes, preds, gt_bboxes=gt_bboxes, gt_points=gt_points,
-                           gt_norm=GT_NORM_BY_DS.get(ds, False))
+                           gt_norm=GT_NORM_BY_DS.get(ds, False),
+                           gt_order=GT_ORDER_BY_DS.get(ds, 'xy'))
         out_jpg = os.path.join(out_dir, f'{key}_p00000.jpg')
         im.save(out_jpg, 'JPEG', quality=82)
     except Exception:

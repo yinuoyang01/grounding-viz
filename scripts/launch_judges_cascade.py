@@ -29,11 +29,11 @@ HF_CACHE     = '/weka/oe-training-default/zixianm/yinuoy/.cache/huggingface'
 # (ds, filter_dir, schema, qwen_shards, intern_shards, workspace, budget)
 # ONE Beaker experiment per dataset → independent kill / inspect / monitor.
 TIER1_PLAN = [
-    ('vg',         'vg_filtered',         'rescored',  1,  1, 'ai2/webolmo-eval',    'ai2/oe-omai'),  # 61k
+    ('vg',         'vg_filtered',         'legacy',    1,  1, 'ai2/webolmo-eval',    'ai2/oe-omai'),  # 61k
     ('seeclick',   'seeclick_filtered',   'new',       1,  1, 'ai2/webolmo-eval',    'ai2/oe-omai'),  # 73k
     ('rf100',      'rf100_filtered',      'new',       1,  1, 'ai2/webolmo-eval',    'ai2/oe-omai'),  # 127k
-    ('openimages', 'openimages_filtered', 'rescored',  7,  9, 'ai2/video-olmo-data', 'ai2/oe-omai'),  # 523k
-    ('pixmo',      'pixmo_filtered',      'rescored', 14, 18, 'ai2/webolmo',         'ai2/oe-omai'),  # 1.4M
+    ('openimages', 'openimages_filtered', 'legacy',    7,  9, 'ai2/video-olmo-data', 'ai2/oe-omai'),  # 523k
+    ('pixmo',      'pixmo_filtered',      'legacy',   14, 18, 'ai2/webolmo',         'ai2/oe-omai'),  # 1.4M
 ]
 # Total: 54 tasks × 4 GPU = 216 GPU. webolmo 32 / video-olmo-data 16 / webolmo-eval 6.
 
@@ -55,9 +55,12 @@ JUDGE_MODELS = {
 }
 
 def filter_glob_for(ds, sub, schema):
-    # 'rescored' schema (vg/oi/pixmo): strict-rescored jsonls (new field names, legacy key struct)
+    # 'rescored': strict-rescored jsonls — DEPRECATED, had a bbox-order bug (transposed).
     if schema == 'rescored':
         return f'{FILTER_ROOT}/{sub}/rescored_worker_*.jsonl'
+    # 'legacy': filter-native worker jsonls (correct info.f1). Excludes rescored_worker_*.
+    if schema == 'legacy':
+        return f'{FILTER_ROOT}/{sub}/worker_*.jsonl'
     return f'{FILTER_ROOT}/{sub}/*.jsonl'
 
 
