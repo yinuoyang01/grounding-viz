@@ -722,8 +722,10 @@ def sample_knowledge_extra(kind, n):
                     with open(p, 'rb') as fh: img = fh.read()
                 except Exception:
                     continue
-                samples.append({'img_bytes': img, 'caption': cap,
-                                'label': r.get('label', ''), 'id': r.get('local_idx', '')})
+                # show original JSONL fields
+                samples.append({'img_bytes': img, 'id': r.get('local_idx', ''),
+                                'fields': [('label', r.get('label', '')),
+                                           ('short_caption', cap)]})
     elif kind == 'visualnews':
         try:
             data = json.load(open(f'{VN_ROOT}/origin/data.json'))
@@ -740,24 +742,28 @@ def sample_knowledge_extra(kind, n):
                 with open(p, 'rb') as fh: img = fh.read()
             except Exception:
                 continue
-            samples.append({'img_bytes': img, 'caption': cap,
-                            'label': r.get('source', ''), 'id': r.get('id', '')})
+            samples.append({'img_bytes': img, 'id': r.get('id', ''),
+                            'fields': [('caption', cap),
+                                       ('source', r.get('source', '')),
+                                       ('topic', r.get('topic', ''))]})
     return samples, len(samples)
 
 
 def render_knowledge_extra(s, sid):
     b64, (w, h) = encode_image(s['img_bytes'])
     if not b64: return ''
-    meta = f"id={escape(str(s['id']))}"
-    if s.get('label'): meta += f" · {escape(str(s['label']))}"
+    rows = ''.join(
+        f'<div class="section-title">{escape(fname)}</div>'
+        f'<div class="caption-text">{escape(str(fval))}</div>'
+        for fname, fval in s['fields'] if fval
+    )
     return f'''<div class="sample" data-sample-idx="{sid}">
   <div class="img-wrap">
     <img src="data:image/jpeg;base64,{b64}" style="max-width:100%;height:auto;border-radius:8px;border:1px solid rgba(10,50,53,0.15)">
   </div>
   <div>
-    <div class="sample-meta">{meta}</div>
-    <div class="section-title">caption</div>
-    <div class="caption-text">{escape(s['caption'])}</div>
+    <div class="sample-meta">id={escape(str(s['id']))}</div>
+    {rows}
   </div>
 </div>'''
 
