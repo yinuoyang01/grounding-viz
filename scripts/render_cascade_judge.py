@@ -186,8 +186,16 @@ def main():
         cats = defaultdict(list)
         for uk, v in both.items():
             cats[categorize(v['qwen'], v['intern'])].append(uk)
-        sections = []
-        for cat, label in order:
+
+        # 4 sub-tabs (one per category) inside this dataset panel
+        SUBLABEL = {
+            'both_mask_wrong': 'Both mask_wrong',
+            'both_yes':        'Both molmo=yes',
+            'both_no':         'Both molmo=no',
+            'disagree':        'One yes / One no',
+        }
+        sub_btns, sub_panels = [], []
+        for si, (cat, _full) in enumerate(order):
             uks = cats.get(cat, [])
             picks = rng.sample(uks, min(args.per_cat, len(uks))) if uks else []
             cards = []
@@ -196,26 +204,47 @@ def main():
                 if not fr: continue
                 c = render_card(ds, fr, both[uk]['qwen'], both[uk]['intern'])
                 if c: cards.append(c)
-            if not cards: continue
-            sections.append(
-                f'<div style="margin-top:20px"><div style="font-weight:700;color:#105257;font-size:14px;'
-                f'border-bottom:2px solid #105257;padding-bottom:4px;margin-bottom:8px">'
-                f'{label} ({len(uks)} total · showing {len(cards)})</div>{"".join(cards)}</div>')
+            spid = f'sub_{ds}_{cat}'
+            active = ' active' if si == 0 else ''
+            disp = '' if si == 0 else 'display:none'
+            sub_btns.append(
+                f'<button class="sub-tab{active}" onclick="showCascadeSub(\'{ds}\',\'{cat}\',this)">'
+                f'{SUBLABEL[cat]} ({len(uks)})</button>')
+            body = "".join(cards) if cards else '<div style="padding:16px;color:rgba(10,50,53,0.5)">No samples in this category yet.</div>'
+            sub_panels.append(
+                f'<div id="{spid}" class="cascade-sub" data-ds="{ds}" style="{disp}">'
+                f'<div style="font-size:11px;color:rgba(10,50,53,0.55);margin:6px 0">'
+                f'{len(uks):,} total · showing {len(cards)}</div>{body}</div>')
+
         n_total = len(both)
         intro = ('<div class="dataset-intro">'
                  f'<div class="intro-title"><b>{pretty} — F1&lt;1 pool, 2-judge cascade (Qwen3-VL-32B + InternVL3-78B)</b></div>'
                  f'<div class="intro-desc">Each card: yellow GT + red Molmo pred, plus both judges’ mask_verdict + '
-                 f'molmo_verdict. Categorized by agreement; disagreements → Stage-2 GPT-5.</div>'
+                 f'molmo_verdict + reasons. 4 sub-tabs by agreement category.</div>'
                  f'<div class="intro-meta">{n_total:,} F1&lt;1 samples judged by both · '
-                 + ' · '.join(f'{c}={len(cats.get(c,[]))}' for c,_ in order) + '</div></div>')
-        panels.append(f'<div id="p_3_{ds}" class="panel" data-cat="cat3">\n{intro}\n{"".join(sections)}\n</div>\n')
+                 + ' · '.join(f'{SUBLABEL[c]}={len(cats.get(c,[]))}' for c,_ in order) + '</div></div>')
+        panels.append(
+            f'<div id="p_3_{ds}" class="panel" data-cat="cat3">\n{intro}\n'
+            f'<div class="sub-tabs">{"".join(sub_btns)}</div>\n'
+            f'{"".join(sub_panels)}\n</div>\n')
 
+    # Inline JS for sub-tab switching (self-contained — no dependency on generate.py JS)
+    sub_js = """<script>
+function showCascadeSub(ds, cat, btn) {
+  document.querySelectorAll('.cascade-sub[data-ds="' + ds + '"]').forEach(function(p){ p.style.display='none'; });
+  var el = document.getElementById('sub_' + ds + '_' + cat); if (el) el.style.display='';
+  var tabs = btn.parentElement.querySelectorAll('.sub-tab');
+  tabs.forEach(function(t){ t.classList.remove('active'); });
+  btn.classList.add('active');
+}
+</script>
+"""
     os.makedirs(args.snippets_dir, exist_ok=True)
     # Overwrite the cat3 dataset snippets (generate.py injects these)
     with open(os.path.join(args.snippets_dir, 'cat3_dataset_tabs.html'), 'w') as f:
         f.write(f'<div id="cat3_tabs" class="ds-tabs">{tabs}</div>\n')
     with open(os.path.join(args.snippets_dir, 'cat3_dataset_panels.html'), 'w') as f:
-        f.write('\n'.join(panels))
+        f.write(sub_js + '\n'.join(panels))
     print(f'wrote cat3_dataset_tabs.html + cat3_dataset_panels.html '
           f'({sum(len(p) for p in panels):,}b, {len(panels)} panels)')
 
