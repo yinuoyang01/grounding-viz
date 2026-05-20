@@ -351,10 +351,12 @@
 </div>
 </div>
 </div>
-
-
-
 <div id="p_2_5" class="panel" data-cat="cat2">
+<div class="sub-tabs">
+<button class="sub-tab active" data-sub="oven_entity">OVEN-entity</button>
+<button class="sub-tab" data-sub="oven_query">OVEN-query</button>
+</div>
+<div class="sub-panel active" data-sub="oven_entity">
 <div class="dataset-intro"><div class="intro-title"><b>OVEN-entity</b> &nbsp;4.93M train (126,199 val) samples</div><div class="intro-desc">Open-domain Visual Entity Recognition — "what is this?" style entity classification across 6M Wikipedia entities. GT is entity_text + Wikidata Q-id.</div><div class="intro-meta">/weka/oe-training-default/oe-encoder/oven_infoseek/annotations/oven_entity_train.jsonl</div></div>
 <div class="sub-tabs">
   <button class="sub-tab active" data-sub="train">train</button>
@@ -707,10 +709,7 @@
 </div>
 </div>
 </div>
-
-
-
-<div id="p_2_6" class="panel" data-cat="cat2">
+<div class="sub-panel" data-sub="oven_query">
 <div class="dataset-intro"><div class="intro-title"><b>OVEN-query</b> &nbsp;32k train (3,291 val) samples</div><div class="intro-desc">OVEN natural-question split — phrased entity queries ("who is this person?", "what bird is this?"). Same answer space as OVEN-entity.</div><div class="intro-meta">/weka/oe-training-default/oe-encoder/oven_infoseek/annotations/oven_query_train.jsonl</div></div>
 <div class="sub-tabs">
   <button class="sub-tab active" data-sub="train">train</button>
@@ -1050,6 +1049,7 @@
     <div class="section-title">question</div><div class="caption-text">what is sold here?</div>
     <div class="section-title">entity</div><div class="caption-text"><b>Produce</b> <span style="font-size:11px;color:var(--muted)">(Q1913301)</span></div>
   </div>
+</div>
 </div>
 </div>
 </div>

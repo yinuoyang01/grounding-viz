@@ -305,9 +305,9 @@ def main():
     n_g = len(g); n_q = len(q); n_i = len(i); n_m = len(m); n_base = len(base_keys); n_glm = len(base_keys & set(m))
     intro = (
         '<div class="dataset-intro">'
-        '<div class="intro-title"><b>4-judge ensemble on red_5k_v2 (1500 grit_v2 + 1500 cc3m + 700 vg + 300 oi + 300 pixmo)</b></div>'
-        f'<div class="intro-desc">Each judged sample shows the 4-judge verdict chips + brief reasons. Categorized by agreement: ALL-AGREE-YES = definite false-reject (Molmo correct, GT too restrictive); ALL-AGREE-NO = real hard example (Molmo wrong); tied = ambiguous.</div>'
-        f'<div class="intro-meta">Judges done: GPT-5={n_g}/4300, Qwen3-VL-32B={n_q}/4300, InternVL3-78B={n_i}/4300, GLM-4.5V={n_m}/4300 · 3-judge intersection={n_base} · 4-judge intersection={n_glm}</div>'
+        '<div class="intro-title"><b>4-judge ensemble on red_5k_v3 (1500 grit_v2 + 1500 cc3m)</b></div>'
+        f'<div class="intro-desc">Each judged sample shows the 4-judge verdict chips + brief reasons. Categorized by agreement: ALL-AGREE-YES = definite false-reject (Molmo correct, GT too restrictive); ALL-AGREE-NO = real hard example (Molmo wrong); tied = ambiguous. (vg/oi/pixmo dropped — they were judged on transposed GT masks; re-judged separately in the full cascade.)</div>'
+        f'<div class="intro-meta">Judges done: GPT-5={n_g}/3000, Qwen3-VL-32B={n_q}/3000, InternVL3-78B={n_i}/3000, GLM-4.5V={n_m}/3000 · 3-judge intersection={n_base} · 4-judge intersection={n_glm}</div>'
         f'{breakdown_html}'
         '</div>'
     )

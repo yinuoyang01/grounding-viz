@@ -1137,6 +1137,13 @@ h1{margin:0 0 8px;color:var(--fg);}
 .ds-tabs[data-grp-of] .ds-tab{padding:6px 13px;font-size:12px;border:none;border-radius:7px 7px 0 0;background:transparent;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;}
 .ds-tabs[data-grp-of] .ds-tab:hover{color:var(--fg);background:var(--cream-dark);}
 .ds-tabs[data-grp-of] .ds-tab.active{background:transparent;color:var(--accent2);font-weight:600;border-bottom:2px solid var(--accent2);}
+/* in-panel sub-tabs (L3 within a single panel, e.g. OVEN entity/query) */
+.sub-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 14px;}
+.sub-tab{padding:6px 13px;font-size:12px;border:none;border-radius:7px 7px 0 0;background:transparent;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;}
+.sub-tab:hover{color:var(--fg);background:var(--cream-dark);}
+.sub-tab.active{color:var(--accent2);font-weight:600;border-bottom:2px solid var(--accent2);}
+.sub-panel{display:none;}
+.sub-panel.active{display:block;}
 .panel{display:none;}
 .panel.active{display:block;}
 .dataset-intro{background:var(--cream-dark);padding:14px 18px;border-radius:8px;margin-bottom:16px;color:var(--fg);border-left:4px solid var(--accent2);}
@@ -1315,6 +1322,18 @@ document.querySelectorAll('.ds-tab').forEach(t => {
     const panel = document.getElementById(t.dataset.panel);
     document.querySelectorAll('.panel[data-cat="' + panel.dataset.cat + '"]').forEach(p => p.classList.remove('active'));
     panel.classList.add('active');
+  });
+});
+// Generic in-panel sub-tabs: a .sub-tab toggles sibling .sub-panel by data-sub
+document.querySelectorAll('.sub-tab').forEach(t => {
+  t.addEventListener('click', () => {
+    const wrap = t.closest('.sub-tabs');
+    wrap.querySelectorAll('.sub-tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    const scope = wrap.parentElement;
+    scope.querySelectorAll(':scope > .sub-panel').forEach(p => p.classList.remove('active'));
+    const tgt = scope.querySelector(':scope > .sub-panel[data-sub="' + t.dataset.sub + '"]');
+    if (tgt) tgt.classList.add('active');
   });
 });
 </script></body></html>''')
