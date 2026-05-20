@@ -22,7 +22,7 @@ import random
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from render_filter import render_yellow_red, GT_NORM_BY_DS
+from render_filter import render_yellow_red, GT_NORM_BY_DS, GT_ORDER_BY_DS
 from build_cat3_dataset_panels import resolve_tar, extract_for_ds, parse_new_key
 
 JUDGE_ROOT = '/weka/oe-training-default/oe-encoder/judge_full'
@@ -30,9 +30,9 @@ FILTER_ROOT = '/weka/oe-training-default/oe-encoder/grounding_filter_molmo2'
 
 # (ds, filter_subdir, filter_glob, schema, pretty)
 DS_CFG = {
-    'vg':         ('vg_filtered',         'rescored_worker_*.jsonl', 'rescored', 'Visual Genome'),
-    'openimages': ('openimages_filtered', 'rescored_worker_*.jsonl', 'rescored', 'OpenImages V7'),
-    'pixmo':      ('pixmo_filtered',      'rescored_worker_*.jsonl', 'rescored', 'Pixmo Point'),
+    'vg':         ('vg_filtered',         'worker_*.jsonl',          'legacy',   'Visual Genome'),
+    'openimages': ('openimages_filtered', 'worker_*.jsonl',          'legacy',   'OpenImages V7'),
+    'pixmo':      ('pixmo_filtered',      'worker_*.jsonl',          'legacy',   'Pixmo Point'),
     'grit_v2':    ('grit_v2_filtered',    '*.jsonl',                 'new',      'GRIT v2'),
     'cc3m':       ('cc3m_filtered_boost', '*.jsonl',                 'new',      'cc3m'),
     'cc12m':      ('cc12m_filtered',      '*.jsonl',                 'new',      'cc12m'),
@@ -64,14 +64,21 @@ def load_filter_index(ds):
                 tar, kit = r['shard'], r['key']
                 gt = r.get('gt_bboxes') if r.get('kind') == 'bbox' else r.get('gt_points')
                 pred = r.get('pred_pts') or []
+                f1 = r.get('f1', 0.0)
+            elif schema == 'legacy':
+                tar, kit = r['shard'], r['key']
+                gt = r.get('gt') or []
+                pred = r.get('pred') or []
+                f1 = (r.get('info') or {}).get('f1', 0.0)
             else:  # new
                 tar, kit = parse_new_key(r['key'])
                 if not tar: continue
                 gt = r.get('gt_bboxes') if r.get('kind') == 'bbox' else r.get('gt_points')
                 pred = r.get('pred_pts') or []
+                f1 = r.get('f1', 0.0)
             uk = uniq_key(tar, kit, r.get('phrase', ''))
             idx[uk] = {'tar': tar, 'key_in_tar': kit, 'gt': gt or [], 'pred': pred,
-                       'kind': r.get('kind', 'bbox'), 'f1': r.get('f1', 0.0),
+                       'kind': r.get('kind', 'bbox'), 'f1': f1,
                        'pred_raw': r.get('pred_raw', '')}
     return idx
 
@@ -112,7 +119,8 @@ def render_card(ds, fr, q, i):
     gt_p = fr['gt'] if kind == 'point' else None
     try:
         im = render_yellow_red(img_bytes, fr['pred'], gt_bboxes=gt_b, gt_points=gt_p,
-                               gt_norm=GT_NORM_BY_DS.get(ds, False), max_side=400)
+                               gt_norm=GT_NORM_BY_DS.get(ds, False),
+                               gt_order=GT_ORDER_BY_DS.get(ds, 'xy'), max_side=400)
     except Exception:
         return None
     buf = io.BytesIO(); im.save(buf, 'JPEG', quality=80)
