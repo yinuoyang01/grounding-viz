@@ -98,13 +98,11 @@ def load_judges(ds):
 
 
 def categorize(q, i):
-    """2-judge category from qwen + intern records."""
-    qm, qv = q.get('mask_verdict'), q.get('molmo_verdict')
-    im, iv = i.get('mask_verdict'), i.get('molmo_verdict')
-    if qm == 'mask_wrong' and im == 'mask_wrong': return 'both_mask_wrong'
-    if qm == 'mask_ok' and im == 'mask_ok':
-        if qv == 'yes' and iv == 'yes': return 'both_yes'
-        if qv == 'no' and iv == 'no': return 'both_no'
+    """2-judge category from qwen + intern molmo_verdict (mask is no longer judged)."""
+    qv = q.get('molmo_verdict')
+    iv = i.get('molmo_verdict')
+    if qv == 'yes' and iv == 'yes': return 'both_yes'
+    if qv == 'no' and iv == 'no': return 'both_no'
     return 'disagree'
 
 
@@ -135,7 +133,7 @@ def render_card(ds, fr, q, i):
     def jrow(name, jr):
         return (f'<div style="margin-bottom:3px"><span style="display:inline-block;width:70px;'
                 f'font-size:11px;font-weight:600;color:#0A3235">{name}:</span>'
-                f'{chip("mask", jr.get("mask_verdict","?"))}{chip("molmo", jr.get("molmo_verdict","?"))}</div>')
+                f'{chip("molmo", jr.get("molmo_verdict","?"))}</div>')
 
     reasons = ''
     for nm, jr in [('Qwen', q), ('InternVL', i)]:
@@ -168,10 +166,9 @@ def main():
     from collections import defaultdict
     panels = []
     tabs = ''
-    order = [('both_mask_wrong', '🚫 Both mask_wrong (drop, GT broken)'),
-             ('both_yes', '✅ Both molmo=yes (recover — false-reject)'),
-             ('both_no', '❌ Both molmo=no (hard example)'),
-             ('disagree', '❓ Qwen↔InternVL disagree (→ Stage 2 GPT-5)')]
+    order = [('both_yes', '✅ Both molmo=yes (false-reject — Molmo correct)'),
+             ('both_no', '❌ Both molmo=no (real hard example — Molmo wrong)'),
+             ('disagree', '❓ Qwen↔InternVL disagree (→ GPT-5 arbitrate)')]
 
     for ds in args.ds:
         pretty = DS_CFG[ds][3]
@@ -195,12 +192,11 @@ def main():
         for uk, v in both.items():
             cats[categorize(v['qwen'], v['intern'])].append(uk)
 
-        # 4 sub-tabs (one per category) inside this dataset panel
+        # 3 sub-tabs (one per category) inside this dataset panel
         SUBLABEL = {
-            'both_mask_wrong': 'Both mask_wrong',
-            'both_yes':        'Both molmo=yes',
-            'both_no':         'Both molmo=no',
-            'disagree':        'One yes / One no',
+            'both_yes':  'Both molmo=yes',
+            'both_no':   'Both molmo=no',
+            'disagree':  'Judges disagree',
         }
         sub_btns, sub_panels = [], []
         for si, (cat, _full) in enumerate(order):
@@ -227,8 +223,8 @@ def main():
         n_total = len(both)
         intro = ('<div class="dataset-intro">'
                  f'<div class="intro-title"><b>{pretty} — F1&lt;1 pool, 2-judge cascade (Qwen3-VL-32B + InternVL3-78B)</b></div>'
-                 f'<div class="intro-desc">Each card: yellow GT + red Molmo pred, plus both judges’ mask_verdict + '
-                 f'molmo_verdict + reasons. 4 sub-tabs by agreement category.</div>'
+                 f'<div class="intro-desc">Card shows yellow GT + red Molmo pred for reference, but the judges '
+                 f'saw ONLY the red pred (no GT mask) — molmo_verdict + reason. 3 sub-tabs by agreement.</div>'
                  f'<div class="intro-meta">{n_total:,} F1&lt;1 samples judged by both · '
                  + ' · '.join(f'{SUBLABEL[c]}={len(cats.get(c,[]))}' for c,_ in order) + '</div></div>')
         panels.append(
