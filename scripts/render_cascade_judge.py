@@ -136,7 +136,7 @@ def render_card(ds, fr, q, i):
             reasons += f'<div style="font-size:10px;color:rgba(10,50,53,0.65);margin-top:2px"><b>{nm}:</b> {html.escape(rs)}</div>'
 
     ST = ('display:grid;grid-template-columns:400px 1fr;gap:16px;padding:12px;margin:8px 0;'
-          'background:var(--cream-dark,#F1E4D1);border:1px solid rgba(10,50,53,0.15);border-radius:8px')
+          'background:var(--bg,#FAF2E9);border:1px solid rgba(10,50,53,0.15);border-radius:8px')
     phrase = html.escape((q.get('phrase') or '')[:300])
     return (f'<div style="{ST}">'
             f'<div><img src="data:image/jpeg;base64,{b64}" style="width:100%;border-radius:4px"/></div>'

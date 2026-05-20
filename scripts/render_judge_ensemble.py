@@ -203,7 +203,7 @@ def render_card(rec_m, vg, vq, vi, vmm):
             rs = html.escape(jr['reason'])
             reasons.append(f'<div style="font-size:10px;color:rgba(10,50,53,0.65);margin-top:2px"><b>{jn}:</b> {rs}</div>')
     reasons_html = ''.join(reasons[:4])
-    ST = 'display:grid;grid-template-columns:400px 1fr;gap:16px;padding:12px;margin:8px 0;background:#fff;border:1px solid rgba(10,50,53,0.15);border-radius:6px'
+    ST = 'display:grid;grid-template-columns:400px 1fr;gap:16px;padding:12px;margin:8px 0;background:var(--bg,#FAF2E9);border:1px solid rgba(10,50,53,0.15);border-radius:8px'
     F1_CHIP = f'<span style="background:#F0529C;color:#FAF2E9;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700">F1={f1:.2f}</span>'
     PR_CHIP = (f'<span style="background:#105257;color:#FAF2E9;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;margin-left:4px">P={pr:.2f}</span>'
                f'<span style="background:#105257;color:#FAF2E9;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;margin-left:2px">R={rc:.2f}</span>')
