@@ -123,6 +123,17 @@ def render_card(ds, fr, q, i):
         return None
     buf = io.BytesIO(); im.save(buf, 'JPEG', quality=80)
     b64 = base64.b64encode(buf.getvalue()).decode()
+    # clean original (no marks) so the viewer can see what the marks occlude
+    try:
+        from PIL import Image as _Im
+        clean = _Im.open(io.BytesIO(img_bytes)).convert('RGB')
+        if max(clean.size) > 400:
+            _s = 400 / max(clean.size)
+            clean = clean.resize((int(clean.size[0]*_s), int(clean.size[1]*_s)))
+        _cb = io.BytesIO(); clean.save(_cb, 'JPEG', quality=80)
+        b64_clean = base64.b64encode(_cb.getvalue()).decode()
+    except Exception:
+        b64_clean = b64
 
     def chip(label, v):
         bg = {'yes':'#0FCB8C','no':'#F0529C','unclear':'#B11BE8',
@@ -145,7 +156,12 @@ def render_card(ds, fr, q, i):
           'background:var(--bg,#FAF2E9);border:1px solid rgba(10,50,53,0.15);border-radius:8px')
     phrase = html.escape((q.get('phrase') or '')[:300])
     return (f'<div style="{ST}">'
-            f'<div><img src="data:image/jpeg;base64,{b64}" style="width:100%;border-radius:4px"/></div>'
+            f'<div>'
+            f'<div style="font-size:10px;color:rgba(10,50,53,0.55);margin-bottom:2px">原图</div>'
+            f'<img src="data:image/jpeg;base64,{b64_clean}" style="width:100%;border-radius:4px;margin-bottom:8px"/>'
+            f'<div style="font-size:10px;color:rgba(10,50,53,0.55);margin-bottom:2px">标注 · 黄=GT 红=Molmo pred</div>'
+            f'<img src="data:image/jpeg;base64,{b64}" style="width:100%;border-radius:4px"/>'
+            f'</div>'
             '<div>'
             f'<div style="color:rgba(10,50,53,0.55);font-family:ui-monospace,Menlo,monospace;font-size:11px;margin-bottom:6px">{ds} / {html.escape(fr["key_in_tar"])} · F1={fr["f1"]:.2f}</div>'
             f'<div style="color:#0A3235;font-size:13px;margin-bottom:6px"><b>{phrase}</b></div>'
