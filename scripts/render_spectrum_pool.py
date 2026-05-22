@@ -49,22 +49,24 @@ def render_card(r, group):
             mk = mk.resize((W, H))
     except Exception:
         return None
-    d = ImageDraw.Draw(im)
+    # overlay the ACTUAL GT mask region (translucent yellow) — this is what
+    # point-in-mask scoring uses, so green/red dots are consistent with what's shown
     m = np.array(mk)
-    ys, xs = np.where(m > 10)
-    if len(xs):
-        lw = max(2, W // 320)
-        d.rectangle([int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max())],
-                    outline=(255, 210, 0), width=lw)
-    rad = max(6, W // 120)
+    yel = np.zeros((H, W, 4), dtype=np.uint8)
+    yel[m > 10] = (255, 210, 0, 115)
+    im = Image.alpha_composite(im.convert('RGBA'), Image.fromarray(yel, 'RGBA')).convert('RGB')
+    # resize to display size, THEN draw dots at a fixed visible radius
+    sc = 520 / max(W, H)
+    im = im.resize((max(1, int(W * sc)), max(1, int(H * sc))))
+    d = ImageDraw.Draw(im)
+    rad = 9
     for p in group['preds']:
         col = (0, 200, 80) if p['label'] == 'pos' else (235, 40, 60)
         for (x, y) in (p.get('pred') or []):
-            d.ellipse([x - rad, y - rad, x + rad, y + rad], outline=(255, 255, 255), width=2)
-            d.ellipse([x - rad, y - rad, x + rad, y + rad], outline=col, width=max(2, rad // 3))
-    sc = 520 / max(im.size)
-    im = im.resize((max(1, int(im.size[0] * sc)), max(1, int(im.size[1] * sc))))
-    buf = io.BytesIO(); im.save(buf, 'JPEG', quality=80)
+            cx, cy = x * sc, y * sc
+            d.ellipse([cx - rad, cy - rad, cx + rad, cy + rad], outline=(255, 255, 255), width=3)
+            d.ellipse([cx - rad, cy - rad, cx + rad, cy + rad], outline=col, width=3)
+    buf = io.BytesIO(); im.save(buf, 'JPEG', quality=82)
     b64 = base64.b64encode(buf.getvalue()).decode()
 
     chips = ''
