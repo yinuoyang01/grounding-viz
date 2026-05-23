@@ -78,14 +78,20 @@ def render_card(g, indexes):
     except Exception:
         return None
 
-    # GT overlay
+    # 1. Build CLEAN image (just resized, no overlays)
+    sc = 540 / max(W, H)
+    nW, nH = max(1, int(W * sc)), max(1, int(H * sc))
+    clean = im.resize((nW, nH))
+
+    # 2. Build MARKED image: GT overlay (at full res) -> resize -> dots + model labels
+    marked_full = im.copy()
     if gt[0] == 'mask':
         yel = np.zeros((H, W, 4), dtype=np.uint8)
-        yel[gt[1] > 10] = (255, 210, 0, 115)
-        im = Image.alpha_composite(im.convert('RGBA'),
-                                   Image.fromarray(yel, 'RGBA')).convert('RGB')
-    else:  # shapes (filter)
-        d0 = ImageDraw.Draw(im)
+        yel[gt[1] > 10] = (255, 210, 0, 130)
+        marked_full = Image.alpha_composite(marked_full.convert('RGBA'),
+                                            Image.fromarray(yel, 'RGBA')).convert('RGB')
+    else:
+        d0 = ImageDraw.Draw(marked_full)
         lw = max(3, W // 280)
         for typ, c in gt[1]:
             if typ == 'bbox':
@@ -96,12 +102,9 @@ def render_card(g, indexes):
                 rr = max(8, W // 120)
                 d0.ellipse([c[0] - rr, c[1] - rr, c[0] + rr, c[1] + rr],
                            outline=(255, 210, 0), width=lw)
-
-    # resize for display, then draw dots
-    sc = 520 / max(W, H)
-    im = im.resize((max(1, int(W * sc)), max(1, int(H * sc))))
-    d = ImageDraw.Draw(im)
-    rad = 9
+    marked = marked_full.resize((nW, nH))
+    d = ImageDraw.Draw(marked)
+    rad = 10
     QCOL = {'clean_pos': (0, 200, 80), 'clean_neg': (235, 40, 60),
             'ambiguous': (140, 140, 140)}
     for p in g['preds']:
@@ -109,13 +112,24 @@ def render_card(g, indexes):
         if q == 'no_pred':
             continue
         col = QCOL.get(q, (140, 140, 140))
+        tag = SHORT.get(p['model'], p['model']).replace('-', '')[:5]
         for (x, y) in (p.get('pred') or []):
             cx, cy = x * sc, y * sc
+            # ring
             d.ellipse([cx - rad, cy - rad, cx + rad, cy + rad],
                       outline=(255, 255, 255), width=3)
             d.ellipse([cx - rad, cy - rad, cx + rad, cy + rad], outline=col, width=3)
-    buf = io.BytesIO(); im.save(buf, 'JPEG', quality=82)
-    b64 = base64.b64encode(buf.getvalue()).decode()
+            # small text label next to the dot (offset right-down)
+            tx, ty = cx + rad + 3, cy - rad - 2
+            # text bg for contrast
+            bb = d.textbbox((tx, ty), tag)
+            d.rectangle([bb[0] - 2, bb[1] - 1, bb[2] + 2, bb[3] + 1], fill=(255, 255, 255))
+            d.text((tx, ty), tag, fill=col)
+
+    def _b64(im):
+        b = io.BytesIO(); im.save(b, 'JPEG', quality=83)
+        return base64.b64encode(b.getvalue()).decode()
+    bc, bm = _b64(clean), _b64(marked)
 
     chips = ''
     for p in g['preds']:
@@ -124,24 +138,31 @@ def render_card(g, indexes):
               'ambiguous': '#999', 'no_pred': '#bbb'}.get(q, '#999')
         tag = {'clean_pos': '✓', 'clean_neg': '✗', 'ambiguous': '?', 'no_pred': '—'}.get(q, '?')
         chips += (f'<span style="background:{bg};color:#FAF2E9;padding:2px 7px;border-radius:4px;'
-                  f'font-size:10px;font-weight:700;margin:0 4px 4px 0;display:inline-block">'
-                  f'{_html.escape(SHORT.get(p["model"], p["model"]))}: {tag}</span>')
-    ST = ('display:grid;grid-template-columns:420px 1fr;gap:16px;padding:12px;margin:8px 0;'
+                  f'font-size:11px;font-weight:700;margin:0 4px 4px 0;display:inline-block">'
+                  f'{_html.escape(SHORT.get(p["model"], p["model"]))} {tag}</span>')
+    ST = ('display:grid;grid-template-columns:780px 1fr;gap:16px;padding:12px;margin:8px 0;'
           'background:var(--bg,#FAF2E9);border:1px solid rgba(10,50,53,0.15);border-radius:8px')
     return (f'<div style="{ST}">'
-            f'<div><img src="data:image/jpeg;base64,{b64}" style="width:100%;border-radius:4px"/></div>'
+            f'<div style="display:flex;gap:8px">'
+            f'<img src="data:image/jpeg;base64,{bc}" style="width:50%;border-radius:4px"/>'
+            f'<img src="data:image/jpeg;base64,{bm}" style="width:50%;border-radius:4px"/>'
+            f'</div>'
             f'<div>'
             f'<div style="color:rgba(10,50,53,0.55);font-family:ui-monospace,Menlo,monospace;'
             f'font-size:11px;margin-bottom:6px">{_html.escape(bench)} / '
             f'{_html.escape(str(g.get("category","-")))}</div>'
-            f'<div style="color:#0A3235;font-size:13px;font-weight:700;margin-bottom:8px">'
+            f'<div style="color:#0A3235;font-size:14px;font-weight:700;margin-bottom:10px;line-height:1.35">'
             f'{_html.escape((g.get("phrase") or "")[:280])}</div>'
-            f'<div>{chips}</div></div></div>')
+            f'<div>{chips}</div>'
+            f'<div style="font-size:10px;color:rgba(10,50,53,0.5);margin-top:8px">'
+            f'Left: clean &middot; Right: yellow=GT, ring=model pred (green clean_pos · '
+            f'red clean_neg · gray ambiguous; no_pred hidden)</div>'
+            f'</div></div>')
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--per_bench', type=int, default=10, help='cards per bench')
+    ap.add_argument('--per_bench', type=int, default=15, help='cards per bench')
     ap.add_argument('--seed', type=int, default=5)
     args = ap.parse_args()
     rng = random.Random(args.seed)
@@ -168,19 +189,30 @@ def main():
     clean = [g for g in pool if g.get('clean_pos') and g.get('clean_neg')]
     print(f'pool {len(pool)} | clean pairs {len(clean)}', flush=True)
 
-    # per-bench sample
+    # per-bench sample, grouped sections in the panel
     by_bench = {'pointing': [], 'reasonseg': [], 'filter': []}
     for g in clean:
         by_bench.setdefault(g['bench'], []).append(g)
-    cards = []
+    BENCH_TITLE = {'pointing': 'Pointing benchmarks (pointarena / refspatial / robospatial / where2place)',
+                   'reasonseg': 'ReasonSeg',
+                   'filter': 'Filter datasets (vg / openimages / pixmo / grit / cc3m / cc12m / seeclick / rf100, sampled)'}
+    sections = []
+    total_cards = 0
     for bench in ['pointing', 'reasonseg', 'filter']:
         pool_b = by_bench.get(bench, [])
         picks = rng.sample(pool_b, min(args.per_bench, len(pool_b)))
+        bcards = []
         for g in picks:
             c = render_card(g, (pt_idx, rs_idx, fl_idx))
-            if c:
-                cards.append(c)
-        print(f'  {bench}: clean {len(pool_b)} -> rendered {sum(1 for c in cards if c)}', flush=True)
+            if c: bcards.append(c)
+        total_cards += len(bcards)
+        sections.append(
+            f'<h3 style="margin:24px 0 4px;color:#105257;border-bottom:1px solid rgba(10,50,53,0.15);'
+            f'padding-bottom:4px">{BENCH_TITLE[bench]} &mdash; <span style="font-weight:400;'
+            f'color:rgba(10,50,53,0.6);font-size:14px">{len(pool_b)} clean pairs, showing {len(bcards)}'
+            f'</span></h3>\n' + '\n'.join(bcards))
+        print(f'  {bench}: clean {len(pool_b)} -> rendered {len(bcards)}', flush=True)
+    cards_html = '\n'.join(sections)
 
     n_pred = sum(len(g['preds']) for g in pool)
     n_pos = sum(sum(p['label'] == 'pos' for p in g['preds']) for g in pool)
@@ -206,10 +238,11 @@ def main():
 
     panel = (f'<div id="p_3_spectrum_pool" class="panel" data-cat="cat3">\n{intro}\n'
              f'<div style="font-size:11px;color:rgba(10,50,53,0.55);margin:8px 0">'
-             f'Yellow = GT region/box (mask for pointing+reasonseg, bbox/point for filter) &middot; '
-             f'green dot = clean_pos &middot; red dot = clean_neg &middot; gray dot = ambiguous '
-             f'(no_pred dots hidden) &middot; showing {len(cards)} sampled clean pairs across 3 benchmarks</div>\n'
-             + '\n'.join(cards) + '\n</div>\n')
+             f'Each card: <b>left</b> = clean image &middot; <b>right</b> = same image with '
+             f'yellow GT and each model\'s prediction (ring + short tag: M2=Molmo2-4B, M7=Molmo-7B, '
+             f'ME=MolmoE-1B, Q3=Qwen2.5VL-3B, Q7=Qwen2.5VL-7B, IV=InternVL3-8B; green=clean_pos, '
+             f'red=clean_neg, gray=ambiguous; no_pred hidden). Showing {total_cards} sampled clean pairs.</div>\n'
+             + cards_html + '\n</div>\n')
     tab = '<button class="ds-tab" data-panel="p_3_spectrum_pool">Spectrum Pool</button>'
 
     os.makedirs(SNIP, exist_ok=True)
