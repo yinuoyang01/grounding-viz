@@ -34,7 +34,7 @@ RS_ROOT = '/weka/oe-training-default/royg/grounding_data/reasonseg/val'
 SNIP = '/weka/oe-training-default/zixianm/yinuoy/grounding-viz/.snippets'
 SHORT = {'molmo2-4b': 'Molmo2-4B', 'molmo7b-d': 'Molmo-7B', 'molmoE-1b': 'MolmoE-1B',
          'qwen2.5vl-3b': 'Qwen2.5VL-3B', 'qwen2.5vl-7b': 'Qwen2.5VL-7B',
-         'internvl3-8b': 'InternVL3-8B'}
+         'qwen2.5vl-32b': 'Qwen2.5VL-32B', 'internvl3-8b': 'InternVL3-8B'}
 
 
 def _img_bytes(r):
@@ -181,7 +181,7 @@ def main():
     print('re-sampling filter recs (deterministic, same seed as eval)...', flush=True)
     fl_idx = {}
     for ds in FLT_SUB:
-        for r in flt_sample(ds, 300, 20):
+        for r in flt_sample(ds, 2000, 20):
             fl_idx[f"{ds}/{r['tar']}/{r['key_in_tar']}"] = (ds, r)
     print(f'  {len(fl_idx)}', flush=True)
 
@@ -225,9 +225,9 @@ def main():
         '<div class="dataset-intro">'
         '<div class="intro-title"><b>Model-spectrum harvest pool &mdash; REAL grounding errors '
         '(consensus-verified)</b></div>'
-        f'<div class="intro-desc">Six pointing models (weak&rarr;strong, 3 architectures: '
-        f'MolmoE-1B / Molmo-7B / Molmo2-4B / Qwen2.5-VL-3B+7B / InternVL3-8B) run on '
-        f'pointing&nbsp;1404 + ReasonSeg&nbsp;196 + filter&nbsp;2400 = {len(pool):,} (image, phrase) groups. '
+        f'<div class="intro-desc">Seven pointing models (weak&rarr;strong, 3 architectures: '
+        f'MolmoE-1B / Molmo-7B / Molmo2-4B / Qwen2.5-VL-3B+7B+32B / InternVL3-8B) run on '
+        f'pointing&nbsp;1404 + ReasonSeg&nbsp;196 + filter&nbsp;~16000 = {len(pool):,} (image, phrase) groups. '
         f'Each prediction is scored vs GT, then quality-filtered by <b>cross-model consensus</b>: '
         f'a clean_pos is GT-hit AND near consensus; a clean_neg is GT-miss AND far from consensus '
         f'(real model error, not a GT-too-strict false-rejection).</div>'
@@ -240,7 +240,7 @@ def main():
              f'<div style="font-size:11px;color:rgba(10,50,53,0.55);margin:8px 0">'
              f'Each card: <b>left</b> = clean image &middot; <b>right</b> = same image with '
              f'yellow GT and each model\'s prediction (ring + short tag: M2=Molmo2-4B, M7=Molmo-7B, '
-             f'ME=MolmoE-1B, Q3=Qwen2.5VL-3B, Q7=Qwen2.5VL-7B, IV=InternVL3-8B; green=clean_pos, '
+             f'ME=MolmoE-1B, Q3=Qwen2.5VL-3B, Q7=Qwen2.5VL-7B, Q32=Qwen2.5VL-32B, IV=InternVL3-8B; green=clean_pos, '
              f'red=clean_neg, gray=ambiguous; no_pred hidden). Showing {total_cards} sampled clean pairs.</div>\n'
              + cards_html + '\n</div>\n')
     tab = '<button class="ds-tab" data-panel="p_3_spectrum_pool">Spectrum Pool</button>'
