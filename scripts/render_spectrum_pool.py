@@ -248,7 +248,7 @@ def main():
     os.makedirs(SNIP, exist_ok=True)
     with open(os.path.join(SNIP, 'cat3_judge_tab.html'), 'w') as f: f.write(tab)
     with open(os.path.join(SNIP, 'cat3_judge_panel.html'), 'w') as f: f.write(panel)
-    print(f'wrote cat3_judge_tab.html + cat3_judge_panel.html ({len(panel):,}b, {len(cards)} cards)')
+    print(f'wrote cat3_judge_tab.html + cat3_judge_panel.html ({len(panel):,}b, {total_cards} cards)')
 
 
 if __name__ == '__main__':
