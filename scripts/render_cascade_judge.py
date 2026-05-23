@@ -152,15 +152,13 @@ def render_card(ds, fr, q, i):
         if rs:
             reasons += f'<div style="font-size:10px;color:rgba(10,50,53,0.65);margin-top:2px"><b>{nm}:</b> {html.escape(rs)}</div>'
 
-    ST = ('display:grid;grid-template-columns:400px 1fr;gap:16px;padding:12px;margin:8px 0;'
+    ST = ('display:grid;grid-template-columns:720px 1fr;gap:16px;padding:12px;margin:8px 0;'
           'background:var(--bg,#FAF2E9);border:1px solid rgba(10,50,53,0.15);border-radius:8px')
     phrase = html.escape((q.get('phrase') or '')[:300])
     return (f'<div style="{ST}">'
-            f'<div>'
-            f'<div style="font-size:10px;color:rgba(10,50,53,0.55);margin-bottom:2px">原图</div>'
-            f'<img src="data:image/jpeg;base64,{b64_clean}" style="width:100%;border-radius:4px;margin-bottom:8px"/>'
-            f'<div style="font-size:10px;color:rgba(10,50,53,0.55);margin-bottom:2px">标注 · 黄=GT 红=Molmo pred</div>'
-            f'<img src="data:image/jpeg;base64,{b64}" style="width:100%;border-radius:4px"/>'
+            f'<div style="display:flex;gap:8px">'
+            f'<img src="data:image/jpeg;base64,{b64_clean}" style="width:50%;border-radius:4px"/>'
+            f'<img src="data:image/jpeg;base64,{b64}" style="width:50%;border-radius:4px"/>'
             f'</div>'
             '<div>'
             f'<div style="color:rgba(10,50,53,0.55);font-family:ui-monospace,Menlo,monospace;font-size:11px;margin-bottom:6px">{ds} / {html.escape(fr["key_in_tar"])} · F1={fr["f1"]:.2f}</div>'
