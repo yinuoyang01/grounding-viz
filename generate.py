@@ -1387,11 +1387,17 @@ document.querySelectorAll('.sub-tab').forEach(t => {
             new_tabs = _re.sub(r'</div>\s*$', open(tabs_jg).read() + '</div>', new_tabs)
         if os.path.isfile(tabs_dp):
             new_tabs = _re.sub(r'</div>\s*$', open(tabs_dp).read() + '</div>', new_tabs)
+        tabs_dp2 = os.path.join(snip_dir, 'cat3_dpo_pairs_v2_tab.html')
+        panel_dp2 = os.path.join(snip_dir, 'cat3_dpo_pairs_v2_panel.html')
+        if os.path.isfile(tabs_dp2):
+            new_tabs = _re.sub(r'</div>\s*$', open(tabs_dp2).read() + '</div>', new_tabs)
         new_panels = (open(panels_ds).read() if os.path.isfile(panels_ds) else '')
         if os.path.isfile(panel_jg):
             new_panels += '\n' + open(panel_jg).read()
         if os.path.isfile(panel_dp):
             new_panels += '\n' + open(panel_dp).read()
+        if os.path.isfile(panel_dp2):
+            new_panels += '\n' + open(panel_dp2).read()
         html = _re.sub(r'<div id="cat3_tabs"[^>]*>.*?</div>', new_tabs, html, count=1, flags=_re.DOTALL)
         for pid in ('p_3_0','p_3_1','p_3_2','p_3_3'):
             html = _re.sub(rf'<div id="{pid}" class="panel" data-cat="cat3">.*?</div>(?=\s*<div id="p_[03]_|\s*</body>|\s*<script>)',

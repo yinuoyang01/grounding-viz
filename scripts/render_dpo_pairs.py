@@ -25,7 +25,7 @@ from eval_filter_sample import sample_ds as flt_sample, gt_pixel as flt_gt_px, S
 from build_cat3_dataset_panels import resolve_tar, extract_for_ds  # noqa: E402
 from judge_inline import DS_TO_TAR_DS  # noqa: E402
 
-DPO_PATH = '/weka/oe-training-default/oe-encoder/rm_dpo_pairs.jsonl'
+DEFAULT_DPO_PATH = '/weka/oe-training-default/oe-encoder/rm_dpo_pairs.jsonl'
 RS_ROOT = '/weka/oe-training-default/royg/grounding_data/reasonseg/val'
 SNIP = '/weka/oe-training-default/zixianm/yinuoy/grounding-viz/.snippets'
 SHORT = {'molmo2-4b': 'Molmo2-4B', 'molmo7b-d': 'Molmo-7B', 'molmoE-1b': 'MolmoE-1B',
@@ -163,6 +163,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--n', type=int, default=100, help='pairs to render')
     ap.add_argument('--seed', type=int, default=7)
+    ap.add_argument('--dpo_path', default=DEFAULT_DPO_PATH,
+                    help='path to rm_dpo_pairs*.jsonl')
+    ap.add_argument('--suffix', default='',
+                    help='filename suffix for snippets (e.g. _v2)')
+    ap.add_argument('--title', default='DPO preference pairs',
+                    help='tab/panel title')
     args = ap.parse_args()
     rng = random.Random(args.seed)
 
@@ -184,8 +190,8 @@ def main():
             fl_idx[f"{ds}/{r['tar']}/{r['key_in_tar']}"] = (ds, r)
     print(f'  {len(fl_idx)}', flush=True)
 
-    pairs = [json.loads(l) for l in open(DPO_PATH)]
-    print(f'pool {len(pairs)} pairs', flush=True)
+    pairs = [json.loads(l) for l in open(args.dpo_path)]
+    print(f'pool {len(pairs)} pairs (from {args.dpo_path})', flush=True)
 
     # stratified by bench so verification covers all 3 (not just filter)
     by_bench = {}
@@ -228,9 +234,10 @@ def main():
         counts[b] = counts.get(b, 0) + 1
     counts_str = ' &middot; '.join(f'{b}: {n}' for b, n in counts.items())
 
+    panel_id = f'p_3_dpo_pairs{args.suffix}'
     intro = (
         '<div class="dataset-intro">'
-        '<div class="intro-title"><b>DPO preference pairs &mdash; human verification view</b></div>'
+        f'<div class="intro-title"><b>{_html.escape(args.title)} &mdash; human verification view</b></div>'
         f'<div class="intro-desc">{len(cards)} random pairs (stratified across pointing / reasonseg / filter) '
         f'from the {len(pairs):,}-pair RM training pool. Each card shows ONE preference pair: '
         f'<b style="color:#0A8A4E">green ring = chosen (clean_pos)</b>, '
@@ -239,15 +246,16 @@ def main():
         f'and rejected really doesn\'t.</div>'
         f'<div class="intro-meta">rendered: {counts_str}</div></div>')
 
-    panel = (f'<div id="p_3_dpo_pairs" class="panel" data-cat="cat3">\n{intro}\n'
+    panel = (f'<div id="{panel_id}" class="panel" data-cat="cat3">\n{intro}\n'
              + '\n'.join(cards) + '\n</div>\n')
-    tab = '<button class="ds-tab" data-panel="p_3_dpo_pairs">DPO Pairs</button>'
+    tab = f'<button class="ds-tab" data-panel="{panel_id}">{_html.escape(args.title)}</button>'
 
     os.makedirs(SNIP, exist_ok=True)
-    with open(os.path.join(SNIP, 'cat3_dpo_pairs_tab.html'), 'w') as f: f.write(tab)
-    with open(os.path.join(SNIP, 'cat3_dpo_pairs_panel.html'), 'w') as f: f.write(panel)
-    print(f'wrote cat3_dpo_pairs_tab.html + cat3_dpo_pairs_panel.html '
-          f'({len(panel):,}b, {len(cards)} cards)')
+    tab_name = f'cat3_dpo_pairs{args.suffix}_tab.html'
+    panel_name = f'cat3_dpo_pairs{args.suffix}_panel.html'
+    with open(os.path.join(SNIP, tab_name), 'w') as f: f.write(tab)
+    with open(os.path.join(SNIP, panel_name), 'w') as f: f.write(panel)
+    print(f'wrote {tab_name} + {panel_name} ({len(panel):,}b, {len(cards)} cards)')
 
 
 if __name__ == '__main__':
