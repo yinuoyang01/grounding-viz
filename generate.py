@@ -1375,19 +1375,14 @@ document.querySelectorAll('.sub-tab').forEach(t => {
     # cat3: REPLACE generate.py's default 4-tab + 4-panel cat3 with snippet-based content
     # from scripts/build_cat3_dataset_panels.py + scripts/render_judge_ensemble.py.
     def _cat3_inject(html):
-        # Cat3 tabs kept (others retired to keep index.html under GitHub's 100MB limit):
+        # Cat3 tabs kept (others retired to keep index.html small):
         #   dataset panels (vg/openimages/pixmo/...) +
-        #   DPO Pairs v36 (pre-strong-fix baseline, kept for A/B) +
-        #   DPO Pairs v38 (final, current) +
+        #   DPO Pairs v38 (final current pool) +
         #   Judge verdicts v38 (final QA panel)
         tabs_ds = os.path.join(snip_dir, 'cat3_dataset_tabs.html')
         panels_ds = os.path.join(snip_dir, 'cat3_dataset_panels.html')
         if not os.path.isfile(tabs_ds): return html
         new_tabs = open(tabs_ds).read().rstrip()
-        tabs_dp36 = os.path.join(snip_dir, 'cat3_dpo_pairs_v36_tab.html')
-        panel_dp36 = os.path.join(snip_dir, 'cat3_dpo_pairs_v36_panel.html')
-        if os.path.isfile(tabs_dp36):
-            new_tabs = _re.sub(r'</div>\s*$', open(tabs_dp36).read() + '</div>', new_tabs)
         tabs_dp38 = os.path.join(snip_dir, 'cat3_dpo_pairs_v38_tab.html')
         panel_dp38 = os.path.join(snip_dir, 'cat3_dpo_pairs_v38_panel.html')
         if os.path.isfile(tabs_dp38):
@@ -1397,8 +1392,6 @@ document.querySelectorAll('.sub-tab').forEach(t => {
         if os.path.isfile(tabs_jv38):
             new_tabs = _re.sub(r'</div>\s*$', open(tabs_jv38).read() + '</div>', new_tabs)
         new_panels = (open(panels_ds).read() if os.path.isfile(panels_ds) else '')
-        if os.path.isfile(panel_dp36):
-            new_panels += '\n' + open(panel_dp36).read()
         if os.path.isfile(panel_dp38):
             new_panels += '\n' + open(panel_dp38).read()
         if os.path.isfile(panel_jv38):
