@@ -169,6 +169,8 @@ def main():
                     help='filename suffix for snippets (e.g. _v2)')
     ap.add_argument('--title', default='DPO preference pairs',
                     help='tab/panel title')
+    ap.add_argument('--filter_per_ds', type=int, default=2000,
+                    help='per-ds sample size when rebuilding the filter index (must >= eval per_ds for full coverage)')
     args = ap.parse_args()
     rng = random.Random(args.seed)
 
@@ -186,7 +188,7 @@ def main():
     print('re-sampling filter recs (deterministic, same seed as eval)...', flush=True)
     fl_idx = {}
     for ds in FLT_SUB:
-        for r in flt_sample(ds, 2000, 20):
+        for r in flt_sample(ds, args.filter_per_ds, 20):
             fl_idx[f"{ds}/{r['tar']}/{r['key_in_tar']}"] = (ds, r)
     print(f'  {len(fl_idx)}', flush=True)
 
