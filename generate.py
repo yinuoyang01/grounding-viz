@@ -1375,59 +1375,34 @@ document.querySelectorAll('.sub-tab').forEach(t => {
     # cat3: REPLACE generate.py's default 4-tab + 4-panel cat3 with snippet-based content
     # from scripts/build_cat3_dataset_panels.py + scripts/render_judge_ensemble.py.
     def _cat3_inject(html):
+        # Cat3 tabs kept (others retired to keep index.html under GitHub's 100MB limit):
+        #   dataset panels (vg/openimages/pixmo/...) +
+        #   DPO Pairs v36 (pre-strong-fix baseline, kept for A/B) +
+        #   DPO Pairs v38 (final, current) +
+        #   Judge verdicts v38 (final QA panel)
         tabs_ds = os.path.join(snip_dir, 'cat3_dataset_tabs.html')
-        tabs_jg = os.path.join(snip_dir, 'cat3_judge_tab.html')
-        tabs_dp = os.path.join(snip_dir, 'cat3_dpo_pairs_tab.html')
         panels_ds = os.path.join(snip_dir, 'cat3_dataset_panels.html')
-        panel_jg = os.path.join(snip_dir, 'cat3_judge_panel.html')
-        panel_dp = os.path.join(snip_dir, 'cat3_dpo_pairs_panel.html')
         if not os.path.isfile(tabs_ds): return html
         new_tabs = open(tabs_ds).read().rstrip()
-        if os.path.isfile(tabs_jg):
-            new_tabs = _re.sub(r'</div>\s*$', open(tabs_jg).read() + '</div>', new_tabs)
-        if os.path.isfile(tabs_dp):
-            new_tabs = _re.sub(r'</div>\s*$', open(tabs_dp).read() + '</div>', new_tabs)
-        tabs_dp2 = os.path.join(snip_dir, 'cat3_dpo_pairs_v2_tab.html')
-        panel_dp2 = os.path.join(snip_dir, 'cat3_dpo_pairs_v2_panel.html')
-        if os.path.isfile(tabs_dp2):
-            new_tabs = _re.sub(r'</div>\s*$', open(tabs_dp2).read() + '</div>', new_tabs)
-        tabs_dp3 = os.path.join(snip_dir, 'cat3_dpo_pairs_v3_partial_tab.html')
-        panel_dp3 = os.path.join(snip_dir, 'cat3_dpo_pairs_v3_partial_panel.html')
-        if os.path.isfile(tabs_dp3):
-            new_tabs = _re.sub(r'</div>\s*$', open(tabs_dp3).read() + '</div>', new_tabs)
-        tabs_dp35 = os.path.join(snip_dir, 'cat3_dpo_pairs_v35_tab.html')
-        panel_dp35 = os.path.join(snip_dir, 'cat3_dpo_pairs_v35_panel.html')
-        if os.path.isfile(tabs_dp35):
-            new_tabs = _re.sub(r'</div>\s*$', open(tabs_dp35).read() + '</div>', new_tabs)
         tabs_dp36 = os.path.join(snip_dir, 'cat3_dpo_pairs_v36_tab.html')
         panel_dp36 = os.path.join(snip_dir, 'cat3_dpo_pairs_v36_panel.html')
         if os.path.isfile(tabs_dp36):
             new_tabs = _re.sub(r'</div>\s*$', open(tabs_dp36).read() + '</div>', new_tabs)
-        tabs_jc36 = os.path.join(snip_dir, 'cat3_judge_cand_v36_tab.html')
-        panel_jc36 = os.path.join(snip_dir, 'cat3_judge_cand_v36_panel.html')
-        if os.path.isfile(tabs_jc36):
-            new_tabs = _re.sub(r'</div>\s*$', open(tabs_jc36).read() + '</div>', new_tabs)
-        tabs_jv36 = os.path.join(snip_dir, 'cat3_judge_verdicts_v36_tab.html')
-        panel_jv36 = os.path.join(snip_dir, 'cat3_judge_verdicts_v36_panel.html')
-        if os.path.isfile(tabs_jv36):
-            new_tabs = _re.sub(r'</div>\s*$', open(tabs_jv36).read() + '</div>', new_tabs)
+        tabs_dp38 = os.path.join(snip_dir, 'cat3_dpo_pairs_v38_tab.html')
+        panel_dp38 = os.path.join(snip_dir, 'cat3_dpo_pairs_v38_panel.html')
+        if os.path.isfile(tabs_dp38):
+            new_tabs = _re.sub(r'</div>\s*$', open(tabs_dp38).read() + '</div>', new_tabs)
+        tabs_jv38 = os.path.join(snip_dir, 'cat3_judge_verdicts_v38_tab.html')
+        panel_jv38 = os.path.join(snip_dir, 'cat3_judge_verdicts_v38_panel.html')
+        if os.path.isfile(tabs_jv38):
+            new_tabs = _re.sub(r'</div>\s*$', open(tabs_jv38).read() + '</div>', new_tabs)
         new_panels = (open(panels_ds).read() if os.path.isfile(panels_ds) else '')
-        if os.path.isfile(panel_jg):
-            new_panels += '\n' + open(panel_jg).read()
-        if os.path.isfile(panel_dp):
-            new_panels += '\n' + open(panel_dp).read()
-        if os.path.isfile(panel_dp2):
-            new_panels += '\n' + open(panel_dp2).read()
-        if os.path.isfile(panel_dp3):
-            new_panels += '\n' + open(panel_dp3).read()
-        if os.path.isfile(panel_dp35):
-            new_panels += '\n' + open(panel_dp35).read()
         if os.path.isfile(panel_dp36):
             new_panels += '\n' + open(panel_dp36).read()
-        if os.path.isfile(panel_jc36):
-            new_panels += '\n' + open(panel_jc36).read()
-        if os.path.isfile(panel_jv36):
-            new_panels += '\n' + open(panel_jv36).read()
+        if os.path.isfile(panel_dp38):
+            new_panels += '\n' + open(panel_dp38).read()
+        if os.path.isfile(panel_jv38):
+            new_panels += '\n' + open(panel_jv38).read()
         html = _re.sub(r'<div id="cat3_tabs"[^>]*>.*?</div>', new_tabs, html, count=1, flags=_re.DOTALL)
         for pid in ('p_3_0','p_3_1','p_3_2','p_3_3'):
             html = _re.sub(rf'<div id="{pid}" class="panel" data-cat="cat3">.*?</div>(?=\s*<div id="p_[03]_|\s*</body>|\s*<script>)',
