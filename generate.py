@@ -588,6 +588,14 @@ TEXTOCR_CAPS_SUBSETS = {
     'textcaps': ('TextCaps (Sidorov et al, ECCV\'20) — natural-language captions describing text-rich OpenImages; 5 captions/image',  '21,953 images / 5x captions',  '0.21 GB json (shares OpenImages images w/ textocr)'),
 }
 
+# NEW scene-text OCR (added to v13 joint OCR mixture). webdataset tars; caption = <text>transcription</text>.
+SCENE_TEXT_BASE = '/weka/oe-training-default/zixianm/yinuoy/scene_text_tars'
+SCENE_TEXT_DATASETS = {
+    'hiertext':  ('hiertext_v6_tars',  'HierText (CVPR\'22) — hierarchical text in natural & document images (word/line/paragraph), dense scene text. Caption = <text>transcription</text>.', '8,278 images',  '2.3 GB tars'),
+    'cocotext':  ('cocotext_v6_tars',  'COCO-Text v2 — scene text on COCO images (signs, labels, products). Caption = <text>transcription</text>.',                                  '13,095 images', '1.3 GB tars'),
+    'ubertext':  ('ubertext_v6_tars',  'Uber-Text — street-level imagery text (storefronts, signs) from car-mounted cameras. Caption = <text>transcription</text>.',                  '66,983 images', '22 GB tars'),
+}
+
 
 def sample_cambrian_subset(subset_dir, n):
     """Cambrian recap: each sample is one dir with caption.json + one image + raw txts."""
@@ -1067,8 +1075,15 @@ def build():
     samples, _ = sample_textcaps(15)
     desc, sc, size = TEXTOCR_CAPS_SUBSETS['textcaps']
     grp_textcaps = [('textcaps', samples, render_textcaps_sample, (desc, sc, size, TEXTCAPS_BASE))]
+    grp_scenetext = []
+    for sub, (tar_dir, desc, sc, size) in SCENE_TEXT_DATASETS.items():
+        print(f'  [ocr/scene-text] sampling {sub}...')
+        path = os.path.join(SCENE_TEXT_BASE, tar_dir)
+        samples, _ = sample_web_grounding(path, SAMPLES)
+        grp_scenetext.append((sub, samples, render_web_grounding_sample, (desc, sc, size, path)))
     cat_ocr = [('text_rich_caption', grp_pixmo), ('Cambrian', grp_cambrian),
-               ('OlmoOCR', grp_olmocr), ('OcrText', grp_textocr), ('OcrCaps', grp_textcaps)]
+               ('OlmoOCR', grp_olmocr), ('OcrText', grp_textocr), ('OcrCaps', grp_textcaps),
+               ('SceneText', grp_scenetext)]
     structure.append(('OCR', cat_ocr, True))  # True => grouped
 
     cat_know = []
