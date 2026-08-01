@@ -110,8 +110,8 @@ def render_card(c, verdict_info):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--candidates', default='/weka/oe-training-default/oe-encoder/judge_candidates_v36.jsonl')
-    ap.add_argument('--verdicts', default='/weka/oe-training-default/oe-encoder/judge_v36_full9270.jsonl')
+    ap.add_argument('--candidates', default='/weka/oe-training-default/oe-encoder/grounding_rm/judge_candidates_v36.jsonl')
+    ap.add_argument('--verdicts', default='/weka/oe-training-default/oe-encoder/grounding_rm/judge_v36_full9270.jsonl')
     ap.add_argument('--per_class', type=int, default=20)
     ap.add_argument('--seed', type=int, default=42)
     ap.add_argument('--suffix', default='_v36')
