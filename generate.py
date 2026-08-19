@@ -1406,11 +1406,20 @@ document.querySelectorAll('.sub-tab').forEach(t => {
         panel_jv38 = os.path.join(snip_dir, 'cat3_judge_verdicts_v38_panel.html')
         if os.path.isfile(tabs_jv38):
             new_tabs = _re.sub(r'</div>\s*$', open(tabs_jv38).read() + '</div>', new_tabs)
+        extra_panels = []
+        for name in ('v41_rm', 'v41_grpo'):
+            t = os.path.join(snip_dir, f'cat3_{name}_tab.html')
+            p = os.path.join(snip_dir, f'cat3_{name}_panel.html')
+            if os.path.isfile(t) and os.path.isfile(p):
+                new_tabs = _re.sub(r'</div>\s*$', open(t).read() + '</div>', new_tabs)
+                extra_panels.append(open(p).read())
         new_panels = (open(panels_ds).read() if os.path.isfile(panels_ds) else '')
         if os.path.isfile(panel_dp38):
             new_panels += '\n' + open(panel_dp38).read()
         if os.path.isfile(panel_jv38):
             new_panels += '\n' + open(panel_jv38).read()
+        for ep in extra_panels:
+            new_panels += '\n' + ep
         html = _re.sub(r'<div id="cat3_tabs"[^>]*>.*?</div>', new_tabs, html, count=1, flags=_re.DOTALL)
         for pid in ('p_3_0','p_3_1','p_3_2','p_3_3'):
             html = _re.sub(rf'<div id="{pid}" class="panel" data-cat="cat3">.*?</div>(?=\s*<div id="p_[03]_|\s*</body>|\s*<script>)',
