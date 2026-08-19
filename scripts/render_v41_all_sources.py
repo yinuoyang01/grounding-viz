@@ -63,7 +63,8 @@ def rm_sections():
                 bypool[f'old_{k}_rerendered'].append(r)
                 break
     for src, tag in ((f'{G}/data/som_synth_v41', 'pixmo_synth'),
-                     (f'{G}/data/som_synth_v41_gui', 'guisyn_synth')):
+                     (f'{G}/data/som_synth_v41_gui', 'guisyn_synth'),
+                     (f'{G}/data/som_synth_v41_plainloss', 'v41.1_patch')):
         rows = [json.loads(l) for l in open(f'{src}/train.jsonl')]
         for r in rows:
             bypool[f"{tag}:{r['meta']['pool']}"].append(r)
