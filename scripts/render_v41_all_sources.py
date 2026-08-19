@@ -52,7 +52,7 @@ def pair_card(r, tag):
 
 
 def rm_sections():
-    out = ['<h2>1 · v41 RM 训练对(全部 som_marks_v2 渲染)</h2>']
+    out = ['<h2>1 · v41 RM training pairs (all rendered with som_marks_v2)</h2>']
     # re-rendered old pools, keyed by the renderer's image subdir
     old = [json.loads(l) for l in open(f'{G}/data/som_v40_full_v2render/train.jsonl')]
     bypool = collections.defaultdict(list)
@@ -81,9 +81,9 @@ def rm_sections():
 
 
 def grpo_section():
-    out = ['<h2>2 · GRPO prompts(data_trimix_molmo_v2,官方 43 模板池)</h2>'
-           '<p>红圈 = reward_model.ground_truth(只给 GT-reward 系用;SoM arm 不看)。'
-           '空 GT 的 no-target 行标注为 [no-target]。</p>']
+    out = ['<h2>2 · GRPO prompts (data_trimix_molmo_v2, official 43-template pool)</h2>'
+           '<p>Red circle = reward_model.ground_truth (consumed only by GT-reward runs; the SoM arm never sees it). '
+           'Rows with empty GT are tagged [no-target].</p>']
     df = pd.read_parquet(f'{G}/rl/data_trimix_molmo_v2/grounding_rl_train.parquet')
     for src in sorted(df['source_dataset'].unique()):
         sub = df[df['source_dataset'] == src]
@@ -117,8 +117,8 @@ def main():
     body = rm_sections() + grpo_section()
     page = ('<!DOCTYPE html><html><head><meta charset="utf-8"><title>v41 data — all sources</title></head>'
             '<body style="font-family:sans-serif;max-width:1150px;margin:0 auto;padding:20px">'
-            '<h1>v41 全数据源浏览</h1>'
-            '<p>RM 对(chosen/rejected)+ GRPO prompt(逐 source),渲染一律 som_marks_v2。</p>'
+            '<h1>v41 data — all sources</h1>'
+            '<p>RM pairs (chosen vs rejected) and GRPO prompts per source; every marker rendered with som_marks_v2.</p>'
             + '\n'.join(body) + '</body></html>')
     with open(OUT, 'w') as f:
         f.write(page)
