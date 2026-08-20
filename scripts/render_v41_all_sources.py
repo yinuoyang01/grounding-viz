@@ -39,37 +39,44 @@ def pair_card(r, tag):
         imr = Image.open(r['images'][1 - ci]).convert('RGB')
     except Exception:
         return None
-    title = f"<b>{_html.escape(tag)}</b> | “{_html.escape(str(m.get('phrase'))[:100])}”"
+    title = f"<b>{_html.escape(tag)}</b> | \u201c{_html.escape(str(m.get('phrase'))[:100])}\u201d"
     if m.get('k') is not None:
-        title += f" | k={m.get('k')}→{m.get('k_rej')}"
+        title += f" | k={m.get('k')}\u2192{m.get('k_rej')}"
+    prompt = r['prompt'] if isinstance(r['prompt'], str) else ''
+    resp_c, resp_r = r['responses'][ci], r['responses'][1 - ci]
+    def _txt(t, color):
+        return (f'<div style="font-size:11.5px;color:{color};background:#f7f7f7;'
+                f'border-radius:4px;padding:4px 6px;margin-top:3px">'
+                f'<b>response:</b> {_html.escape(t[:400])}</div>')
     return ('<div style="border:1px solid #ccc;border-radius:8px;padding:8px;margin:10px 0">'
             f'<div style="font-size:13px;margin-bottom:4px">{title}</div>'
+            f'<div style="font-size:11.5px;background:#eef4ff;border-radius:4px;padding:4px 6px;'
+            f'margin-bottom:6px"><b>prompt:</b> {_html.escape(prompt[:300])}</div>'
             '<div style="display:flex;gap:8px">'
             f'<div style="flex:1"><img style="width:100%" src="data:image/jpeg;base64,{b64(imc)}">'
-            '<div style="font-size:12px;color:#080"><b>CHOSEN</b></div></div>'
+            '<div style="font-size:12px;color:#080"><b>CHOSEN</b></div>'
+            f'{_txt(resp_c, "#060")}</div>'
             f'<div style="flex:1"><img style="width:100%" src="data:image/jpeg;base64,{b64(imr)}">'
-            '<div style="font-size:12px;color:#a00"><b>REJECTED</b></div></div></div></div>')
+            '<div style="font-size:12px;color:#a00"><b>REJECTED</b></div>'
+            f'{_txt(resp_r, "#600")}</div></div></div>')
 
 
 def rm_sections():
-    out = ['<h2>1 · v41 RM training pairs (all rendered with som_marks_v2)</h2>']
-    # re-rendered old pools, keyed by the renderer's image subdir
-    old = [json.loads(l) for l in open(f'{G}/data/som_v40_full_v2render/train.jsonl')]
+    out = ['<h2>1 \u00b7 v42 RM training pairs (som_marks_v2 renders + number-grounded text)</h2>']
+    rows = [json.loads(l) for l in open(f'{G}/data/som_v42_numbered_training/train.jsonl')]
     bypool = collections.defaultdict(list)
-    for r in old:
-        p = r['images'][0]
-        for k in ('som_v2', 'som_v39', 'notarget'):
-            if f'/{k}/' in p:
-                bypool[f'old_{k}_rerendered'].append(r)
-                break
-    for src, tag in ((f'{G}/data/som_synth_v41', 'pixmo_synth'),
-                     (f'{G}/data/som_synth_v41_gui', 'guisyn_synth'),
-                     (f'{G}/data/som_synth_v41_plainloss', 'v41.1_patch')):
-        rows = [json.loads(l) for l in open(f'{src}/train.jsonl')]
-        for r in rows:
-            bypool[f"{tag}:{r['meta']['pool']}"].append(r)
+    for r in rows:
+        m = r['meta']
+        if 'pool' in m:
+            bypool[f"synth:{m['pool']}"].append(r)
+        else:
+            p = r['images'][0]
+            for k in ('som_v2', 'som_v39', 'notarget'):
+                if f'/{k}/' in p:
+                    bypool[f'old_{k}_rerendered'].append(r)
+                    break
     for pool in sorted(bypool):
-        out.append(f'<h3>{_html.escape(pool)} ({len(bypool[pool]):,} pairs)</h3>')
+        out.append(f'<h3>{_html.escape(pool)} ({len(bypool[pool]):,} rows)</h3>')
         n = 0
         for r in rng.sample(bypool[pool], min(30, len(bypool[pool]))):
             c = pair_card(r, pool)
