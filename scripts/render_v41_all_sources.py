@@ -86,11 +86,24 @@ def grpo_section():
            '<p>Red circle = reward_model.ground_truth (consumed only by GT-reward runs; the SoM arm never sees it). '
            'Rows with empty GT are tagged [no-target].</p>']
     df = pd.read_parquet(f'{G}/rl/data_trimix_molmo_v2/grounding_rl_train.parquet')
+    # per-source composition table
+    tot = len(df)
+    rowshtml = []
+    for src in sorted(df['source_dataset'].unique()):
+        sub = df[df['source_dataset'] == src]
+        nt = (sub['reward_model'].apply(lambda m: m['ground_truth'] == '[]')).mean()
+        rowshtml.append(f'<tr><td>{_html.escape(src)}</td><td style="text-align:right">{len(sub):,}</td>'
+                        f'<td style="text-align:right">{len(sub)/tot*100:.1f}%</td>'
+                        f'<td style="text-align:right">{nt*100:.0f}%</td></tr>')
+    out.append('<table style="border-collapse:collapse;margin:8px 0" border="1" cellpadding="5">'
+               '<tr><th>source</th><th>rows</th><th>share</th><th>no-target rows</th></tr>'
+               + ''.join(rowshtml) +
+               f'<tr><th>TOTAL</th><th style="text-align:right">{tot:,}</th><th>100%</th><th></th></tr></table>')
     for src in sorted(df['source_dataset'].unique()):
         sub = df[df['source_dataset'] == src]
         out.append(f'<h3>{_html.escape(src)} ({len(sub):,} rows)</h3>')
         made = 0
-        for _, r in sub.sample(min(40, len(sub)), random_state=11).iterrows():
+        for _, r in sub.sample(min(60, len(sub)), random_state=11).iterrows():
             try:
                 im = Image.open(r['image']).convert('RGB')
             except Exception:
@@ -109,7 +122,7 @@ def grpo_section():
                        f'<div style="font-size:13px;margin-bottom:4px">“{_html.escape(prompt[:160])}”{tagg}</div>'
                        f'<img style="max-width:70%" src="data:image/jpeg;base64,{b64(im)}"></div>')
             made += 1
-            if made >= 2:
+            if made >= 6:
                 break
     return out
 
