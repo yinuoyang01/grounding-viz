@@ -96,17 +96,23 @@ def rm_sections():
                 buckets['lo'].append(r)
             else:
                 buckets['rest'].append(r)
+        # the legacy som_v2 pool is under quality scrutiny - show a bigger slice of it
+        want = 10 if pool == 'old_som_v2_rerendered' else 4
         picks = []
-        for key in ('lo', 'hi', 'empty', 'rest', 'lo', 'hi'):
-            if buckets[key] and len(picks) < 4:
-                picks.append(buckets[key].pop(0))
+        order = ('lo', 'hi', 'empty', 'rest')
+        i = 0
+        while len(picks) < want and any(buckets[k] for k in order):
+            k = order[i % len(order)]
+            if buckets[k]:
+                picks.append(buckets[k].pop(0))
+            i += 1
         n = 0
         for r in picks:
             c = pair_card(r, pool)
             if c:
                 out.append(c)
                 n += 1
-            if n >= 4:
+            if n >= want:
                 break
     return out
 
