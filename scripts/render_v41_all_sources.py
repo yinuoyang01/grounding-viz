@@ -75,15 +75,38 @@ def rm_sections():
                 if f'/{k}/' in p:
                     bypool[f'old_{k}_rerendered'].append(r)
                     break
+    def kpair(r):
+        m = r['meta']
+        if 'pts' in m:
+            return len(m['pts'][0]), len(m['pts'][1])
+        kc = len(m.get('pts_chosen') or m.get('pts_chosen_pct100') or [])
+        return kc, len(m.get('pts_rejected') or [])
     for pool in sorted(bypool):
         out.append(f'<h3>{_html.escape(pool)} ({len(bypool[pool]):,} rows)</h3>')
+        cand = rng.sample(bypool[pool], min(400, len(bypool[pool])))
+        # diversity buckets: both-marked low-k, both-marked high-k, one-side-unmarked, rest
+        buckets = {'lo': [], 'hi': [], 'empty': [], 'rest': []}
+        for r in cand:
+            ka, kb = kpair(r)
+            if ka == 0 or kb == 0:
+                buckets['empty'].append(r)
+            elif max(ka, kb) >= 4:
+                buckets['hi'].append(r)
+            elif min(ka, kb) >= 1:
+                buckets['lo'].append(r)
+            else:
+                buckets['rest'].append(r)
+        picks = []
+        for key in ('lo', 'hi', 'empty', 'rest', 'lo', 'hi'):
+            if buckets[key] and len(picks) < 4:
+                picks.append(buckets[key].pop(0))
         n = 0
-        for r in rng.sample(bypool[pool], min(30, len(bypool[pool]))):
+        for r in picks:
             c = pair_card(r, pool)
             if c:
                 out.append(c)
                 n += 1
-            if n >= 2:
+            if n >= 4:
                 break
     return out
 
