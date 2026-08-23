@@ -1408,7 +1408,7 @@ document.querySelectorAll('.sub-tab').forEach(t => {
             new_tabs = _re.sub(r'</div>\s*$', open(tabs_jv38).read() + '</div>', new_tabs)
         # SoM RM data lives in its own top-level cat4 tab (user request 8/20)
         cat4_tabs, extra_panels = [], []
-        for name in ('v41_rm', 'v43_rm', 'v41_grpo'):
+        for name in ('v41_rm', 'v43_rm', 'v44_sample', 'v44_records', 'v44_arenas', 'v41_grpo'):
             t = os.path.join(snip_dir, f'cat3_{name}_tab.html')
             p = os.path.join(snip_dir, f'cat3_{name}_panel.html')
             if os.path.isfile(t) and os.path.isfile(p):
