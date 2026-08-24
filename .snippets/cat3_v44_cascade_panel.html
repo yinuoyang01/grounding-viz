@@ -1,6 +1,15 @@
 <div id="p_3_v44_cascade" class="panel" data-cat="cat3">
 <h1>v44 pair audit &mdash; luna vs sol verdicts</h1>
 <p>Every one of the 125,298 assembled pairs was audited by gpt-5.6-luna (chosen_ok: marks on-target AND complete; rejected_wrong: contains a real mistake). Pairs luna flagged went to gpt-5.6-sol; a pair was removed only when BOTH judges called it bad. Outcome: kept clean 83,294 (66.5%), kept after sol overruled luna 8,099 (6.5%), dropped 33,905 (27.1%). Final verified set: 90,482 pairs (direction re-balanced 15,855:15,855).</p>
+<p>Judge calibration on GUI arenas (ceiling = points provably inside the GT box, floor = random points outside it; n=130/130/200 per arm):</p>
+<table border="1" cellpadding="6" style="border-collapse:collapse;font-size:13px">
+<tr><th>judge</th><th>ceiling (point provably in GT box)</th><th>floor (random point)</th>
+<th>official-wrong &rarr; on_target</th><th>kept as rejected</th><th>purity of kept</th><th>$/48.3k</th></tr>
+<tr><td>gpt-5 medium</td><td>88.0%</td><td>1.0%</td><td>42.5%</td><td>57.5%</td><td>90.0%</td><td>$295</td></tr>
+<tr><td><b>gpt-5.6-luna</b></td><td>93.8%</td><td>1.5%</td><td>52.0%</td><td>48.0%</td><td>93.0%</td><td><b>$22</b></td></tr>
+<tr><td>gpt-5.6-terra</td><td>94.6%</td><td>2.3%</td><td>54.5%</td><td>45.5%</td><td>93.3%</td><td>$205</td></tr>
+<tr><td><b>gpt-5.6-sol</b></td><td>95.4%</td><td>2.3%</td><td>45.5%</td><td>54.5%</td><td><b>96.1%</b></td><td>$419</td></tr>
+</table>
 <h2>KEPT &mdash; luna clean (sol not consulted) (83,294 pairs)</h2>
 <div style="border:1px solid #ccc;border-radius:8px;padding:10px;margin:14px 0">
 <div style="font-size:13px;margin-bottom:4px">&ldquo;doors&rdquo; | pixmo_points | pool=v44_real_error</div>
