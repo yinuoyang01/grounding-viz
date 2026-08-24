@@ -1408,7 +1408,7 @@ document.querySelectorAll('.sub-tab').forEach(t => {
             new_tabs = _re.sub(r'</div>\s*$', open(tabs_jv38).read() + '</div>', new_tabs)
         # SoM RM data lives in its own top-level cat4 tab (user request 8/20)
         cat4_tabs, extra_panels = [], []
-        for name in ('v44_gpt_filter', 'v44_cascade', 'v44_final'):
+        for name in ():   # SoM RM data moved to standalone som-rm.html (build_som_rm_page.py)
             t = os.path.join(snip_dir, f'cat3_{name}_tab.html')
             p = os.path.join(snip_dir, f'cat3_{name}_panel.html')
             if os.path.isfile(t) and os.path.isfile(p):
