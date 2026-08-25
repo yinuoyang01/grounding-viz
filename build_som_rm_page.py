@@ -12,7 +12,7 @@ import re
 HERE = os.path.dirname(os.path.abspath(__file__))
 SNIP = os.path.join(HERE, '.snippets')
 OUT = os.path.join(HERE, 'som-rm-2.html')
-PANELS = ('official_pairs', 'gpt_judge', 'som_marks', 'gui_verified')
+PANELS = ('gt_problem', 'official_pairs', 'gpt_judge', 'som_marks')
 
 CSS = '''
 :root{--bg:#faf7f2;--fg:#222;--muted:#777;--line:#ddd;--accent2:#d6336c;}
