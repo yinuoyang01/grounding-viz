@@ -12,7 +12,7 @@ import re
 HERE = os.path.dirname(os.path.abspath(__file__))
 SNIP = os.path.join(HERE, '.snippets')
 OUT = os.path.join(HERE, 'som-rm-2.html')
-PANELS = ('ds_pixmo_points', 'ds_pixmo_points_high_freq', 'ds_cosyn_point',
+PANELS = ('chrisc', 'ds_pixmo_points', 'ds_pixmo_points_high_freq', 'ds_cosyn_point',
           'ds_guisyn', 'ds_synthetic_ground_point', 'ds_ground_cua', 'ds_pixmo_count')
 
 CSS = '''
