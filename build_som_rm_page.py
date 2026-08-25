@@ -12,7 +12,7 @@ import re
 HERE = os.path.dirname(os.path.abspath(__file__))
 SNIP = os.path.join(HERE, '.snippets')
 OUT = os.path.join(HERE, 'som-rm.html')
-PANELS = ('som_v5', 'som_v4', 'gui_verified', 'v44_cascade', 'v44_final')
+PANELS = ('som_marks', 'gui_verified', 'v44_cascade', 'v44_final')
 
 CSS = '''
 :root{--bg:#faf7f2;--fg:#222;--muted:#777;--line:#ddd;--accent2:#d6336c;}
