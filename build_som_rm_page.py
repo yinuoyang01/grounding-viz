@@ -11,7 +11,7 @@ import re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SNIP = os.path.join(HERE, '.snippets')
-OUT = os.path.join(HERE, 'som-rm.html')
+OUT = os.path.join(HERE, 'som-rm-2.html')
 PANELS = ('som_marks', 'gui_verified', 'v44_cascade', 'v44_final')
 
 CSS = '''
